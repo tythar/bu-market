@@ -55,10 +55,15 @@
 
             <div class="card-body p-4">
                 <!-- Badges & Stats row -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-primary-bu px-3 py-2 rounded-pill">{{ listing.category.name }}</span>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge badge-bu-category px-3 py-2 rounded-pill">{{ listing.category.name }}</span>
                         <span class="badge bg-light text-dark border px-3 py-2 rounded-pill text-uppercase">{{ listing.get_condition_display }}</span>
+                        {% if listing.community %}
+                            <span class="badge bg-light text-primary-bu border px-3 py-2 rounded-pill">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.community.name }}
+                            </span>
+                        {% endif %}
                     </div>
                     <small class="text-muted d-flex align-items-center gap-1">
                         <i class="bi bi-eye-fill"></i> {{ listing.views_count }} views
@@ -74,19 +79,28 @@
                 <!-- Specifications Grid -->
                 <h4 class="fw-bold mb-3 text-dark">Specifications</h4>
                 <div class="row g-3 mb-4">
-                    <div class="col-6 col-md-4">
+                    <div class="col-6 col-md-3">
                         <div class="spec-box">
                             <div class="spec-title">Condition</div>
                             <div class="spec-value text-uppercase">{{ listing.get_condition_display }}</div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-6 col-md-3">
                         <div class="spec-box">
                             <div class="spec-title">Location</div>
                             <div class="spec-value text-truncate" title="{{ listing.location }}">{{ listing.location }}</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-6 col-md-3">
+                        <div class="spec-box">
+                            <div class="spec-title">Campus / Hub</div>
+                            <div class="spec-value text-truncate" title="{{ listing.community.name|default:'Uganda Hub' }}">
+                                <i class="bi {% if listing.community.hub_type == 'CAMPUS' %}bi-mortarboard-fill text-primary-bu{% else %}bi-shop text-primary-bu{% endif %} me-1"></i>
+                                {{ listing.community.name|default:'Uganda Hub' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
                         <div class="spec-box">
                             <div class="spec-title">Published</div>
                             <div class="spec-value">{{ listing.created_at|date:"M d, Y" }}</div>
@@ -137,21 +151,83 @@
 
 <div class="d-grid gap-2">
   {% if request.user != listing.seller %}
+    <!-- Active Negotiation State for Buyer -->
+    {% if buyer_active_offer %}
+      {% if buyer_active_offer.status == 'PENDING' %}
+        <div class="alert alert-warning border-0 shadow-sm rounded-3 p-3 text-start mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong class="text-dark small"><i class="bi bi-hourglass-split text-warning me-1"></i> Offer Pending Review</strong>
+            <span class="badge bg-warning text-dark">{{ buyer_active_offer.offered_price|floatformat:0 }} UGX</span>
+          </div>
+          <p class="small text-muted mb-2">Waiting for {{ listing.seller.username }} to accept, decline, or counter.</p>
+          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill w-100" data-bs-toggle="modal" data-bs-target="#makeOfferModal">
+            <i class="bi bi-pencil me-1"></i> Adjust Offer
+          </button>
+        </div>
+      {% elif buyer_active_offer.status == 'COUNTERED' %}
+        <div class="alert alert-primary border-0 shadow-sm rounded-3 p-3 text-start mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong class="text-dark small">⚡ Counter Offer Received!</strong>
+            <span class="badge bg-primary text-white fs-6">{{ buyer_active_offer.counter_price|floatformat:0 }} UGX</span>
+          </div>
+          {% if buyer_active_offer.seller_note %}
+            <p class="small text-muted mb-2 fst-italic">"{{ buyer_active_offer.seller_note }}"</p>
+          {% endif %}
+          <div class="d-flex gap-2">
+            <form method="post" action="{% url 'core:respond_offer' buyer_active_offer.id %}" class="flex-fill">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="accept">
+              <button type="submit" class="btn btn-sm btn-success w-100 rounded-pill fw-semibold">Accept Counter 🎉</button>
+            </form>
+            <form method="post" action="{% url 'core:respond_offer' buyer_active_offer.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="decline">
+              <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Decline</button>
+            </form>
+          </div>
+        </div>
+      {% elif buyer_active_offer.status == 'ACCEPTED' %}
+        <div class="alert alert-success border-0 shadow-sm rounded-3 p-3 text-start mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong class="text-dark small"><i class="bi bi-patch-check-fill text-success me-1"></i> Deal Agreed!</strong>
+            <span class="badge bg-success text-white">{{ buyer_active_offer.final_price|floatformat:0 }} UGX</span>
+          </div>
+          <p class="small text-muted mb-2">Your negotiated bargain was accepted by {{ listing.seller.username }}.</p>
+          <a href="{% url 'core:deal_receipt' buyer_active_offer.id %}" class="btn btn-sm btn-success w-100 rounded-pill fw-semibold">
+            <i class="bi bi-ticket-perforated-fill me-1"></i> View Deal Pass & WhatsApp
+          </a>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <!-- Make an Offer CTA Button (Vibrant & Gen Z — open to all students, no account required) -->
+    {% if not buyer_active_offer or buyer_active_offer.status != 'ACCEPTED' %}
+      <button type="button" class="btn btn-bargain py-2.5 btn-lg d-flex align-items-center justify-content-center gap-2 mb-1 w-100 shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#makeOfferModal">
+        <i class="bi bi-tag-fill text-warning fs-5"></i> <span>🤝 Make an Offer (Bargain)</span>
+      </button>
+    {% endif %}
+
     <div class="d-flex gap-2 flex-wrap">
-      <a href="{% url 'messaging:start_conversation' listing.id %}" class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center gap-2">
-          <i class="bi bi-chat-left-text"></i> Message Seller First
+      <a href="{% url 'messaging:start_conversation' listing.id %}" class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center gap-2 flex-fill">
+          <i class="bi bi-chat-left-text"></i> Message First
       </a>
-      <a href="{% url 'messaging:start_conversation' listing.id %}" class="btn btn-primary-bu d-flex align-items-center justify-content-center gap-2">
-          <i class="bi bi-envelope-fill"></i> Contact Seller
+      <a href="{% url 'messaging:start_conversation' listing.id %}" class="btn btn-primary-bu d-flex align-items-center justify-content-center gap-2 flex-fill">
+          <i class="bi bi-envelope-fill"></i> Contact
       </a>
     </div>
-    <a href="{% url 'core:seller_profile' listing.seller.username %}" class="text-decoration-none">
-        <i class="bi bi-shop me-2"></i> View Seller Store
-    </a>
   {% else %}
     <div class="alert alert-secondary text-center mb-2">
       This is your own listing.
     </div>
+    {% if incoming_offers %}
+      <div class="alert alert-info border-0 shadow-sm rounded-3 p-3 mb-2 text-start">
+        <div class="d-flex justify-content-between align-items-center">
+          <strong class="small text-dark"><i class="bi bi-fire text-danger me-1"></i> {{ incoming_offers.count }} Bargain Offer(s)</strong>
+          <a href="{% url 'core:my_offers' %}" class="btn btn-sm btn-primary-bu rounded-pill px-3 py-1">Review Offers</a>
+        </div>
+      </div>
+    {% endif %}
+
     {% if listing.status != listing.Status.SOLD %}
       <form method="post" action="{% url 'core:mark_as_sold' listing.slug %}" onsubmit="return confirm('Mark this item as sold? This will end the buyer conversation.');">
         {% csrf_token %}
@@ -161,7 +237,7 @@
       <div class="alert alert-success text-center mb-0">Sold on {{ listing.sold_at|date:"M d, Y" }}</div>
     {% endif %}
   {% endif %}
-    </div>
+</div>
 
             <hr class="my-4">
 
@@ -193,23 +269,283 @@
                 </div>
             {% endif %}
 
-                <a href="{% url 'core:seller_profile' listing.seller.username %}" class="btn btn-light py-2.5 mt-2 d-flex align-items-center justify-content-center gap-2">
-                    <i class="bi bi-shop"></i> View Seller Store
-                </a>
+            <a href="{% url 'core:seller_profile' listing.seller.username %}" class="btn btn-light py-2.5 mt-2 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-shop"></i> View Seller Store
+            </a>
 
-            </div>
-        </div>
-
-        <!-- Safety Tips -->
-        <div class="card border-0 shadow-sm p-4 bg-light rounded-4">
-            <h5 class="fw-bold mb-3 text-warning-emphasis"><i class="bi bi-shield-fill-exclamation me-1 text-warning"></i> Safety Tips</h5>
-            <ul class="text-start small mb-0 ps-3">
-                <li class="mb-2">Meet in public, crowded campus spaces (e.g. Library, Cafe).</li>
-                <li class="mb-2">Never pay for an item before inspect-testing it.</li>
-                <li class="mb-2">Verify items carefully (especially electronics).</li>
-                <li>Beware of unrealistic price offers.</li>
-            </ul>
         </div>
     </div>
+
+    <!-- Safety Tips -->
+    <div class="card border-0 shadow-sm p-4 bg-light rounded-4">
+        <h5 class="fw-bold mb-3 text-warning-emphasis"><i class="bi bi-shield-fill-exclamation me-1 text-warning"></i> Safety Tips</h5>
+        <ul class="text-start small mb-0 ps-3">
+            <li class="mb-2">Meet in public, crowded campus spaces (e.g. Library, Cafe).</li>
+            <li class="mb-2">Never pay for an item before inspect-testing it.</li>
+            <li class="mb-2">Verify items carefully (especially electronics).</li>
+            <li>Beware of unrealistic price offers.</li>
+        </ul>
+    </div>
 </div>
+
+<!-- ================= MAKE AN OFFER MODAL (Gen Z / Bargaining Engine) ================= -->
+<div class="modal fade" id="makeOfferModal" tabindex="-1" aria-labelledby="makeOfferModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-3 text-white text-center position-relative" style="background: linear-gradient(135deg, #0E1931 0%, #1A2F5A 100%); border-bottom: 3px solid #FFC107;">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-toggle="modal" aria-label="Close"></button>
+        <div class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold text-uppercase mb-1" style="font-size: 0.72rem;">
+          🤝 Campus Bargain
+        </div>
+        <h5 class="modal-title fw-bold text-white mb-0" id="makeOfferModalLabel">Make an Offer</h5>
+        <p class="text-white-50 small mb-0">Propose a fair price to {{ listing.seller.username }}</p>
+      </div>
+
+      <!-- Modal Form -->
+      <form method="post" action="{% url 'core:make_offer' listing.slug %}" id="makeOfferForm">
+        {% csrf_token %}
+        <div class="modal-body p-4">
+          <!-- Original Price Card -->
+          <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light border mb-3">
+            <div>
+              <div class="small text-muted">Listed Price:</div>
+              <div class="fw-bold fs-5 text-dark" id="listedPriceDisplay">{{ listing.price|floatformat:0 }} UGX</div>
+            </div>
+            <div class="text-end">
+              <span class="badge badge-bu-category rounded-pill">{{ listing.category.name }}</span>
+            </div>
+          </div>
+
+          <!-- Quick Bargain Discount Chips -->
+          <label class="form-label fw-bold text-dark small mb-2 d-flex justify-content-between">
+            <span>⚡ Quick Discount Chips</span>
+            <span class="text-muted fw-normal">Tap to calculate</span>
+          </label>
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill discount-chip" data-percent="10">-10%</button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill discount-chip" data-percent="15">-15%</button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill discount-chip" data-percent="20">-20%</button>
+            <button type="button" class="btn btn-sm btn-outline-warning text-dark rounded-pill discount-chip" data-percent="25">Student Budget 🎓 (-25%)</button>
+            <button type="button" class="btn btn-sm btn-outline-info text-dark rounded-pill discount-chip" data-percent="12">Last Price Boss 🤝</button>
+          </div>
+
+          <!-- Custom Offer Input -->
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark small" for="offeredPriceInput">Your Offer Amount (UGX):</label>
+            <div class="input-group input-group-lg">
+              <span class="input-group-text fw-bold bg-white text-primary-bu border-end-0">UGX</span>
+              <input type="number" step="100" min="100" max="{{ listing.price }}" class="form-control fw-bold fs-4 text-dark border-start-0" id="offeredPriceInput" name="offered_price" placeholder="e.g. 120000" value="{{ buyer_active_offer.offered_price|default:'' }}" required>
+            </div>
+            <!-- Live Savings Feedback Pill -->
+            <div id="savingsBadge" class="mt-2 text-success small fw-bold" style="min-height: 22px;"></div>
+          </div>
+
+          <!-- Quick Pitch Chips -->
+          <label class="form-label fw-bold text-dark small mb-2 d-flex justify-content-between">
+            <span>💬 Quick Student Pitch</span>
+            <span class="text-muted fw-normal">Optional note</span>
+          </label>
+          <div class="d-flex gap-1.5 flex-wrap mb-2">
+            <button type="button" class="btn btn-sm btn-light border rounded-pill pitch-chip py-1 px-2.5 small" data-text="Cash ready on campus right now! 🏃‍♂️">Cash Ready 🏃‍♂️</button>
+            <button type="button" class="btn btn-sm btn-light border rounded-pill pitch-chip py-1 px-2.5 small" data-text="Can meet at the library this afternoon 📚">Meet at Library 📚</button>
+            <button type="button" class="btn btn-sm btn-light border rounded-pill pitch-chip py-1 px-2.5 small" data-text="Serious student buyer, budget is tight 🙏">Student Budget 🙏</button>
+            <button type="button" class="btn btn-sm btn-light border rounded-pill pitch-chip py-1 px-2.5 small" data-text="Last price boss? Let's make a deal! 🤝">Last Price Boss 🤝</button>
+          </div>
+
+          <textarea class="form-control form-control-sm rounded-3" name="buyer_note" id="buyerNoteInput" rows="2" placeholder="Add a polite note to convince the seller...">{{ buyer_active_offer.buyer_note|default:'' }}</textarea>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer p-3 bg-light border-top d-flex flex-column gap-2">
+          {% if listing.whatsapp_number %}
+            <button type="button" id="sendWhatsAppBargainBtn" class="btn btn-whatsapp btn-lg rounded-pill fw-bold py-2.5 w-100 shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-whatsapp fs-4"></i> Send Bargain on WhatsApp 📲
+            </button>
+          {% elif listing.phone_number %}
+            <a href="{{ listing.tel_url }}" class="btn btn-call btn-lg rounded-pill fw-bold py-2.5 w-100 shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-telephone-fill fs-5"></i> Call Seller with Offer 📞
+            </a>
+          {% else %}
+            <button type="button" class="btn btn-secondary btn-lg rounded-pill w-100 disabled">
+              Seller did not provide phone/WhatsApp
+            </button>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+            <div class="d-flex justify-content-between align-items-center w-100 mt-1">
+              <button type="submit" class="btn btn-link text-muted small text-decoration-none px-0">
+                <i class="bi bi-cloud-arrow-up me-1"></i> Also save to in-app offers
+              </button>
+              <button type="button" class="btn btn-link text-secondary small text-decoration-none px-0" data-bs-dismiss="modal">
+                Cancel
+              </button>
+            </div>
+          {% else %}
+            <button type="button" class="btn btn-link text-secondary small text-decoration-none mt-1" data-bs-dismiss="modal">
+              Cancel
+            </button>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-bargain {
+    background: linear-gradient(135deg, #0E1931 0%, #1A2F5A 100%) !important;
+    color: #FFFFFF !important;
+    border: 2px solid #FFC107 !important;
+    font-weight: 600 !important;
+    transition: all 0.25s ease;
+}
+.btn-bargain:hover {
+    background: linear-gradient(135deg, #FFC107 0%, #E0A800 100%) !important;
+    color: #0E1931 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(255, 193, 7, 0.4) !important;
+}
+.btn-whatsapp {
+    background-color: #25D366 !important;
+    color: white !important;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-whatsapp:hover {
+    background-color: #1EBE5D !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35) !important;
+}
+.discount-chip.active {
+    background-color: #0E1931 !important;
+    color: #FFC107 !important;
+    border-color: #0E1931 !important;
+}
+.pitch-chip:hover {
+    background-color: #EEF2F9 !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const listPrice = parseFloat("{{ listing.price|stringformat:'.2f' }}");
+    const offerInput = document.getElementById('offeredPriceInput');
+    const savingsBadge = document.getElementById('savingsBadge');
+    const discountChips = document.querySelectorAll('.discount-chip');
+    const pitchChips = document.querySelectorAll('.pitch-chip');
+    const noteInput = document.getElementById('buyerNoteInput');
+    const sendWhatsAppBtn = document.getElementById('sendWhatsAppBargainBtn');
+
+    function updateSavings() {
+        const val = parseFloat(offerInput.value);
+        if (!isNaN(val) && val > 0 && listPrice > 0) {
+            const savings = listPrice - val;
+            if (savings > 0) {
+                const percent = Math.round((savings / listPrice) * 100);
+                savingsBadge.innerHTML = `🔥 You save <strong>${Math.round(savings).toLocaleString()} UGX</strong> (${percent}% discount)`;
+                savingsBadge.className = "mt-2 text-success small fw-semibold";
+            } else if (savings === 0) {
+                savingsBadge.innerHTML = "🤝 Paying the full listed price.";
+                savingsBadge.className = "mt-2 text-muted small";
+            } else {
+                savingsBadge.innerHTML = "⚡ Offering above listed price!";
+                savingsBadge.className = "mt-2 text-primary small fw-semibold";
+            }
+        } else {
+            savingsBadge.innerHTML = "";
+        }
+    }
+
+    if (offerInput) {
+        offerInput.addEventListener('input', function() {
+            discountChips.forEach(c => c.classList.remove('active'));
+            updateSavings();
+        });
+    }
+
+    discountChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            discountChips.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            const percent = parseFloat(this.getAttribute('data-percent'));
+            const discountedPrice = Math.round(listPrice * (1 - (percent / 100)));
+            offerInput.value = discountedPrice;
+            updateSavings();
+        });
+    });
+
+    pitchChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            const text = this.getAttribute('data-text');
+            if (noteInput) {
+                noteInput.value = text;
+            }
+        });
+    });
+
+    if (offerInput && offerInput.value) {
+        updateSavings();
+    }
+
+    // Direct WhatsApp Bargain Action
+    if (sendWhatsAppBtn) {
+        sendWhatsAppBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const val = parseFloat(offerInput.value);
+            if (isNaN(val) || val <= 0) {
+                alert("Please tap a discount chip or enter your offer amount in UGX first!");
+                offerInput.focus();
+                return;
+            }
+
+            const savings = listPrice - val;
+            const discountPercent = savings > 0 ? Math.round((savings / listPrice) * 100) : 0;
+            const note = noteInput ? noteInput.value.trim() : '';
+
+            let rawNumber = "{{ listing.whatsapp_number|default:'' }}";
+            let cleanNumber = rawNumber.replace(/\D/g, '');
+            if (cleanNumber.startsWith('0')) {
+                cleanNumber = '256' + cleanNumber.substring(1);
+            } else if (!cleanNumber.startsWith('256') && cleanNumber.length === 9) {
+                cleanNumber = '256' + cleanNumber;
+            }
+
+            let msg = `🤝 *BU-MARKET BARGAIN OFFER* ⚡\n\n`;
+            msg += `Hey @{{ listing.seller.username }}, I saw your listing on BU-MARKET:\n`;
+            msg += `📦 *Item:* {{ listing.title }}\n`;
+            msg += `💰 *Listed Price:* ${Math.round(listPrice).toLocaleString()} UGX\n`;
+            msg += `🎯 *My Offer:* ${Math.round(val).toLocaleString()} UGX`;
+            if (discountPercent > 0) {
+                msg += ` (${discountPercent}% OFF / Save ${Math.round(savings).toLocaleString()} UGX)`;
+            }
+            msg += `\n`;
+            if (note) {
+                msg += `💬 *Note:* "${note}"\n`;
+            }
+            msg += `📍 *Campus Hub:* {{ listing.community.name|default:'Bugema University' }}\n\n`;
+            msg += `Can we make a deal boss? Let me know where on campus we can meet! 🚀`;
+
+            const waUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
+
+            // If user is authenticated, save in database in background
+            {% if user.is_authenticated %}
+            try {
+                const formEl = document.getElementById('makeOfferForm');
+                const formData = new FormData(formEl);
+                fetch("{% url 'core:make_offer' listing.slug %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).catch(() => {});
+            } catch (err) {}
+            {% endif %}
+
+            window.open(waUrl, '_blank');
+        });
+    }
+});
+</script>
 {% endblock %}
+

@@ -35,7 +35,7 @@
         <div class="d-flex align-items-center gap-1 mt-2 flex-wrap px-1">
             <span class="small text-muted me-1" style="font-size: 0.75rem;">Active:</span>
             {% if request.GET.q %}
-                <span class="badge bg-primary-bu bg-opacity-10 text-primary-bu border border-primary border-opacity-10 rounded-pill">"{{ request.GET.q }}"</span>
+                <span class="badge badge-bu-category rounded-pill">"{{ request.GET.q }}"</span>
             {% endif %}
             {% if request.GET.category %}
                 <span class="badge bg-accent-bu text-dark rounded-pill">{{ request.GET.category }}</span>
@@ -62,6 +62,24 @@
                 </div>
             </div>
 
+            <!-- Campus / Community Hub -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold"><i class="bi bi-geo-alt-fill text-warning me-1"></i>Campus / Town Hub</label>
+                <select name="community" class="form-select">
+                    <option value="all" {% if request.GET.community == 'all' or community_scope == 'all' and not request.GET.community %}selected{% endif %}>🌐 All Uganda (Nationwide)</option>
+                    <optgroup label="🎓 Universities & Campuses">
+                        {% for comm in campus_communities %}
+                            <option value="{{ comm.slug }}" {% if request.GET.community == comm.slug or not request.GET.community and active_community.slug == comm.slug and community_scope != 'all' %}selected{% endif %}>{{ comm.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="🏙️ Commercial Hubs & Towns">
+                        {% for comm in town_communities %}
+                            <option value="{{ comm.slug }}" {% if request.GET.community == comm.slug or not request.GET.community and active_community.slug == comm.slug and community_scope != 'all' %}selected{% endif %}>{{ comm.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+
             <!-- Category -->
             <div class="mb-4">
                 <label class="form-label fw-semibold">Category</label>
@@ -75,7 +93,7 @@
 
             <!-- Location -->
             <div class="mb-4">
-                <label class="form-label fw-semibold">Location</label>
+                <label class="form-label fw-semibold">Location / Address</label>
                 <input type="text" name="location" class="form-control" placeholder="e.g. Hostel, Main Gate" value="{{ request.GET.location }}">
             </div>
 
@@ -145,6 +163,24 @@
                         <input type="text" name="q" class="form-control border-start-0" placeholder="What are you looking for?" value="{{ request.GET.q }}">
                     </div>
                 </div>
+
+                <!-- Campus / Community Hub -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold"><i class="bi bi-geo-alt-fill text-warning me-1"></i>Campus / Town Hub</label>
+                    <select name="community" class="form-select">
+                        <option value="all" {% if request.GET.community == 'all' or community_scope == 'all' and not request.GET.community %}selected{% endif %}>🌐 All Uganda (Nationwide)</option>
+                        <optgroup label="🎓 Universities & Campuses">
+                            {% for comm in campus_communities %}
+                                <option value="{{ comm.slug }}" {% if request.GET.community == comm.slug or not request.GET.community and active_community.slug == comm.slug and community_scope != 'all' %}selected{% endif %}>{{ comm.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="🏙️ Commercial Hubs & Towns">
+                            {% for comm in town_communities %}
+                                <option value="{{ comm.slug }}" {% if request.GET.community == comm.slug or not request.GET.community and active_community.slug == comm.slug and community_scope != 'all' %}selected{% endif %}>{{ comm.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
                 
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Category</label>
@@ -158,7 +194,7 @@
                 
                 <!-- Location filter -->
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Location</label>
+                    <label class="form-label fw-semibold">Location / Address</label>
                     <input type="text" name="location" class="form-control" placeholder="e.g. Kampala Road" value="{{ request.GET.location }}">
                 </div>
 
@@ -214,8 +250,13 @@
     
     <!-- Listings Grid -->
     <div class="col-lg-9">
-        <div class="d-flex justify-content-between align-items-center mb-3 mb-md-4">
-            <h3 class="fw-bold mb-0 fs-4 fs-md-3">Browse Marketplace</h3>
+        <div class="d-flex justify-content-between align-items-center mb-3 mb-md-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold mb-0 fs-4 fs-md-3 d-inline-block">Browse Marketplace</h3>
+                <span class="badge bg-primary-bu text-white rounded-pill px-2.5 py-1.5 ms-2 align-middle" style="font-size: 0.75rem;">
+                    <i class="bi bi-geo-alt-fill text-warning me-1"></i>{% if community_scope == 'all' or request.GET.community == 'all' %}All Uganda (Nationwide){% elif active_community %}{{ active_community.name }}{% endif %}
+                </span>
+            </div>
             <span class="text-muted small">{{ page_obj.paginator.count }} item(s) found</span>
         </div>
         
@@ -242,12 +283,20 @@
                         
                         <div class="card-body d-flex flex-column p-2.5 p-md-3">
                             <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
-                                <span class="badge {% if listing.is_promoted %}bg-primary-bu{% else %}bg-light text-dark border{% endif %} rounded-pill px-2 py-1" style="font-size: 0.7rem;">{{ listing.category.name }}</span>
+                                <span class="badge badge-bu-category rounded-pill">{{ listing.category.name }}</span>
                                 <span class="badge text-uppercase bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 0.65rem;">{{ listing.get_condition_display }}</span>
                             </div>
                             
                             <h5 class="card-title fw-bold text-truncate mb-1 text-dark fs-6" title="{{ listing.title }}">{{ listing.title }}</h5>
-                            <p class="text-muted small mb-2 mb-md-3 text-truncate" style="font-size: 0.75rem;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.location }}</p>
+                            <p class="text-muted small mb-1 text-truncate" style="font-size: 0.75rem;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.location }}</p>
+                            
+                            {% if listing.community %}
+                                <div class="mb-2">
+                                    <span class="badge bg-light text-dark border rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">
+                                        <i class="bi {% if listing.community.hub_type == 'CAMPUS' %}bi-mortarboard-fill text-primary-bu{% else %}bi-shop text-primary-bu{% endif %} me-0.5"></i>{{ listing.community.name }}
+                                    </span>
+                                </div>
+                            {% endif %}
                             
                             <div class="mt-auto d-flex justify-content-between align-items-center flex-wrap gap-1">
                                 <span class="text-primary-bu fw-bold fs-6 fs-md-5">{{ listing.price }} UGX</span>

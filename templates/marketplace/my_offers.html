@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bargains & Offers | BU-MARKET{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header banner -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">
+                🤝 Bargaining & Offers Hub
+            </h2>
+            <p class="text-muted mb-0">Track and respond to price negotiations on campus listings</p>
+        </div>
+        <div>
+            <a href="{% url 'core:browse' %}" class="btn btn-accent-bu rounded-pill px-4">
+                <i class="bi bi-shop me-1"></i> Browse Marketplace
+            </a>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="offersTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4 py-2 fw-semibold d-flex align-items-center gap-2" id="buyer-tab" data-bs-toggle="pill" data-bs-target="#buyer-offers" type="button" role="tab">
+                <i class="bi bi-tag-fill"></i> Offers I Made
+                {% if active_bargains_count > 0 %}
+                    <span class="badge bg-warning text-dark rounded-pill">{{ active_bargains_count }}</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 py-2 fw-semibold d-flex align-items-center gap-2" id="seller-tab" data-bs-toggle="pill" data-bs-target="#seller-offers" type="button" role="tab">
+                <i class="bi bi-inbox-fill"></i> Offers Received
+                {% if pending_received_count > 0 %}
+                    <span class="badge bg-danger rounded-pill">{{ pending_received_count }}</span>
+                {% endif %}
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="offersTabContent">
+        <!-- ================= BUYER TAB: OFFERS I'VE MADE ================= -->
+        <div class="tab-pane fade show active" id="buyer-offers" role="tabpanel">
+            {% if offers_made %}
+                <div class="row g-3">
+                    {% for offer in offers_made %}
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 position-relative offer-card">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <!-- Item Image -->
+                                    <a href="{% url 'core:listing_detail' offer.listing.slug %}">
+                                        {% if offer.listing.image %}
+                                            <img src="{{ offer.listing.image.url }}" alt="{{ offer.listing.title }}" class="rounded-3 object-fit-cover shadow-sm" style="width: 80px; height: 80px;">
+                                        {% else %}
+                                            <div class="rounded-3 bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                                <i class="bi bi-image fs-3"></i>
+                                            </div>
+                                        {% endif %}
+                                    </a>
+
+                                    <!-- Details -->
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge badge-bu-category rounded-pill">{{ offer.listing.category.name }}</span>
+                                            <!-- Status badge -->
+                                            {% if offer.status == 'PENDING' %}
+                                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2.5 py-1">⏳ Pending Seller</span>
+                                            {% elif offer.status == 'COUNTERED' %}
+                                                <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-2.5 py-1">⚡ Counter Offered</span>
+                                            {% elif offer.status == 'ACCEPTED' %}
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1">🎉 Deal Agreed</span>
+                                            {% elif offer.status == 'DECLINED' %}
+                                                <span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1">❌ Declined</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <h6 class="fw-bold mb-1">
+                                            <a href="{% url 'core:listing_detail' offer.listing.slug %}" class="text-decoration-none text-dark hover-primary">
+                                                {{ offer.listing.title }}
+                                            </a>
+                                        </h6>
+
+                                        <div class="small text-muted mb-2">
+                                            Seller: <strong class="text-dark">@{{ offer.seller.username }}</strong> • Listed: {{ offer.original_price|floatformat:0 }} UGX
+                                        </div>
+
+                                        <!-- Prices Comparison -->
+                                        <div class="p-2.5 rounded-3 bg-light border mb-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="small text-muted">My Offer:</span>
+                                                <span class="fw-bold text-dark">{{ offer.offered_price|floatformat:0 }} UGX</span>
+                                            </div>
+
+                                            {% if offer.status == 'COUNTERED' and offer.counter_price %}
+                                                <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top">
+                                                    <span class="small text-primary fw-bold">⚡ Seller's Counter:</span>
+                                                    <span class="fw-extrabold text-primary fs-6">{{ offer.counter_price|floatformat:0 }} UGX</span>
+                                                </div>
+                                                {% if offer.seller_note %}
+                                                    <div class="small text-muted mt-1 fst-italic">"{{ offer.seller_note }}"</div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Buyer Actions based on status -->
+                                        {% if offer.status == 'COUNTERED' %}
+                                            <div class="d-flex gap-2 mt-2">
+                                                <form method="post" action="{% url 'core:respond_offer' offer.id %}" class="flex-fill">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="accept">
+                                                    <button type="submit" class="btn btn-success btn-sm w-100 rounded-pill fw-semibold">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Accept Counter
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'core:respond_offer' offer.id %}" class="flex-fill">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="decline">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-pill">
+                                                        Decline
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% elif offer.status == 'ACCEPTED' %}
+                                            <div class="d-flex gap-2 mt-2">
+                                                <a href="{% url 'core:deal_receipt' offer.id %}" class="btn btn-primary-bu btn-sm flex-fill rounded-pill fw-semibold">
+                                                    <i class="bi bi-ticket-perforated-fill me-1"></i> View Deal Pass
+                                                </a>
+                                                {% if offer.listing.whatsapp_number %}
+                                                    <a href="{{ offer.get_whatsapp_url }}" target="_blank" class="btn btn-whatsapp btn-sm px-3 rounded-pill">
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% elif offer.status == 'DECLINED' %}
+                                            <a href="{% url 'core:listing_detail' offer.listing.slug %}" class="btn btn-sm btn-outline-secondary w-100 rounded-pill">
+                                                Make a New Offer
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                    <div class="display-3 text-muted mb-3">🤝</div>
+                    <h4 class="fw-bold">No Bargain Offers Made Yet</h4>
+                    <p class="text-muted">Found something you like on campus? Don't hesitate to negotiate a price that fits your student budget!</p>
+                    <div>
+                        <a href="{% url 'core:browse' %}" class="btn btn-accent-bu rounded-pill px-4">Browse Campus Listings</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ================= SELLER TAB: OFFERS RECEIVED ================= -->
+        <div class="tab-pane fade" id="seller-offers" role="tabpanel">
+            {% if offers_received %}
+                <div class="row g-3">
+                    {% for offer in offers_received %}
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 position-relative offer-card">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <!-- Item Image -->
+                                    <a href="{% url 'core:listing_detail' offer.listing.slug %}">
+                                        {% if offer.listing.image %}
+                                            <img src="{{ offer.listing.image.url }}" alt="{{ offer.listing.title }}" class="rounded-3 object-fit-cover shadow-sm" style="width: 80px; height: 80px;">
+                                        {% else %}
+                                            <div class="rounded-3 bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                                <i class="bi bi-image fs-3"></i>
+                                            </div>
+                                        {% endif %}
+                                    </a>
+
+                                    <!-- Details -->
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge badge-bu-category rounded-pill">{{ offer.listing.category.name }}</span>
+                                            {% if offer.status == 'PENDING' %}
+                                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2.5 py-1">⏳ Action Needed</span>
+                                            {% elif offer.status == 'COUNTERED' %}
+                                                <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-2.5 py-1">⚡ Counter Sent</span>
+                                            {% elif offer.status == 'ACCEPTED' %}
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1">🎉 Deal Agreed</span>
+                                            {% elif offer.status == 'DECLINED' %}
+                                                <span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1">❌ Declined</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <h6 class="fw-bold mb-1">
+                                            <a href="{% url 'core:listing_detail' offer.listing.slug %}" class="text-decoration-none text-dark hover-primary">
+                                                {{ offer.listing.title }}
+                                            </a>
+                                        </h6>
+
+                                        <div class="small text-muted mb-2">
+                                            Buyer: <strong class="text-dark">@{{ offer.buyer.username }}</strong> • Listed: {{ offer.original_price|floatformat:0 }} UGX
+                                        </div>
+
+                                        <!-- Offer box -->
+                                        <div class="p-2.5 rounded-3 bg-light border mb-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="small text-muted">Buyer's Offer:</span>
+                                                <span class="fw-bold text-success fs-6">{{ offer.offered_price|floatformat:0 }} UGX</span>
+                                            </div>
+                                            {% if offer.savings_amount > 0 %}
+                                                <div class="small text-danger mt-0.5">
+                                                    Discount: -{{ offer.savings_amount|floatformat:0 }} UGX ({{ offer.discount_percent }}% off)
+                                                </div>
+                                            {% endif %}
+                                            {% if offer.buyer_note %}
+                                                <div class="small text-muted mt-1 fst-italic">
+                                                    Note: "{{ offer.buyer_note }}"
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Seller Action Prompt (Accept, Counter, Decline) -->
+                                        {% if offer.status == 'PENDING' %}
+                                            <div class="d-flex gap-2 mt-2">
+                                                <!-- Accept button -->
+                                                <form method="post" action="{% url 'core:respond_offer' offer.id %}" class="flex-fill">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="accept">
+                                                    <button type="submit" class="btn btn-success btn-sm w-100 rounded-pill fw-semibold">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Accept
+                                                    </button>
+                                                </form>
+
+                                                <!-- Counter button (triggers inline collapse or modal) -->
+                                                <button type="button" class="btn btn-outline-primary btn-sm flex-fill rounded-pill" data-bs-toggle="collapse" data-bs-target="#counterBox-{{ offer.id }}">
+                                                    <i class="bi bi-arrow-left-right me-1"></i> Counter
+                                                </button>
+
+                                                <!-- Decline button -->
+                                                <form method="post" action="{% url 'core:respond_offer' offer.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="decline">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Decline offer">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+
+                                            <!-- Counter Form Collapse -->
+                                            <div class="collapse mt-2" id="counterBox-{{ offer.id }}">
+                                                <form method="post" action="{% url 'core:respond_offer' offer.id %}" class="p-3 bg-white border rounded-3 shadow-sm">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="counter">
+                                                    <label class="form-label small fw-semibold text-dark">Your Counter Offer (UGX):</label>
+                                                    <div class="input-group input-group-sm mb-2">
+                                                        <span class="input-group-text">UGX</span>
+                                                        <input type="number" name="counter_price" class="form-control" placeholder="e.g. 135000" required>
+                                                    </div>
+                                                    <input type="text" name="note" class="form-control form-control-sm mb-2" placeholder="Quick note (e.g. Lowest I can do is 135k boss)">
+                                                    <button type="submit" class="btn btn-primary-bu btn-sm w-100 rounded-pill">
+                                                        Send Counter Offer ⚡
+                                                    </button>
+                                                </form>
+                                            </div>
+
+                                        {% elif offer.status == 'ACCEPTED' %}
+                                            <div class="d-flex gap-2 mt-2">
+                                                <a href="{% url 'core:deal_receipt' offer.id %}" class="btn btn-primary-bu btn-sm flex-fill rounded-pill fw-semibold">
+                                                    <i class="bi bi-ticket-perforated-fill me-1"></i> View Deal Pass
+                                                </a>
+                                                <a href="{% url 'messaging:start_conversation' offer.listing.id %}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill" title="Message buyer">
+                                                    <i class="bi bi-chat-dots"></i>
+                                                </a>
+                                            </div>
+                                        {% elif offer.status == 'COUNTERED' %}
+                                            <div class="small text-muted mt-1">
+                                                Waiting for buyer to respond to your counter offer of <strong>{{ offer.counter_price|floatformat:0 }} UGX</strong>.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                    <div class="display-3 text-muted mb-3">📦</div>
+                    <h4 class="fw-bold">No Incoming Offers Yet</h4>
+                    <p class="text-muted">When campus buyers propose a price offer on your listings, they will appear here with instant prompts to Accept, Counter, or Decline.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.nav-pills .nav-link {
+    color: #0E1931;
+    background: #EEF2F9;
+    transition: all 0.2s ease;
+}
+.nav-pills .nav-link.active {
+    background-color: #0E1931 !important;
+    color: #FFC107 !important;
+}
+.offer-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.offer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(14, 25, 49, 0.08) !important;
+}
+.btn-whatsapp {
+    background-color: #25D366 !important;
+    color: white !important;
+    border: none;
+}
+.btn-whatsapp:hover {
+    background-color: #1EBE5D !important;
+}
+</style>
+{% endblock %}

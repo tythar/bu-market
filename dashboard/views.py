@@ -119,7 +119,7 @@ def create_hostel(request):
     else:
         form = HostelForm(user=request.user)
 
-    return render(request, 'dashboard/hostel_form.html', {'form': form, 'title': 'Post a Hostel'})
+    return render(request, 'dashboard/hostel_form.html', {'form': form, 'title': 'Post Housing & Rental Unit'})
 
 
 

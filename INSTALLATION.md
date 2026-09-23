@@ -10,7 +10,7 @@ This guide explains how to install, configure, and troubleshoot the BU-MARKET ap
 Ensure you have the following installed:
 - Python 3.12+
 - pip (Python package manager)
-- SQLite3 (comes pre-packaged with Python)
+- PostgreSQL / Supabase account
 
 ### 2. Step-by-Step Setup
 1. Clone the codebase and enter the directory:
@@ -36,6 +36,10 @@ Ensure you have the following installed:
    DEBUG=True
    SECRET_KEY=your-django-secret-key-goes-here
    ALLOWED_HOSTS=localhost,127.0.0.1
+   DATABASE_URL=postgresql://user:password@host:port/dbname
+   SUPABASE_URL=https://<your-project-id>.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+   SUPABASE_STORAGE_BUCKET=media
    ```
 5. Build the local database:
    ```bash

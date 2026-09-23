@@ -1,65 +1,219 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Find a Hostel | BU-MARKET{% endblock %}
+{% block title %}Universal Housing & Rentals Hub | BU-MARKET{% endblock %}
 
 {% block content %}
 <div class="my-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
-        <h2 class="fw-bold mb-0 d-flex align-items-center">
-            <i class="bi bi-house-door-fill text-primary-bu me-2"></i> Looking for Hostel ? lets find one. Easy🤗
-        </h2>
-        {% if user.is_authenticated %}
-            <a href="{% url 'dashboard:create_hostel' %}" class="btn btn-primary-bu rounded-pill px-3">
-                <i class="bi bi-plus-circle-fill me-1"></i> Post a Hostel
+    <!-- Header Banner -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
+        <div>
+            <h2 class="fw-bold mb-1 d-inline-block align-middle">
+                🏠 Housing & Rentals Hub
+            </h2>
+            <span class="badge bg-primary-bu text-white rounded-pill px-3 py-1.5 ms-2 align-middle" style="font-size: 0.75rem;">
+                <i class="bi bi-geo-alt-fill text-warning me-1"></i>{% if community_scope == 'all' or request.GET.community == 'all' %}All Uganda (Nationwide){% elif active_community %}{{ active_community.name }}{% endif %}
+            </span>
+            <p class="text-muted small mb-0 mt-1">Hostels, Bedsitters, Apartments & Commercial Stalls across Uganda</p>
+        </div>
+        {% if user.is_authenticated and user.is_seller %}
+            <a href="{% url 'dashboard:create_hostel' %}" class="btn btn-primary-bu rounded-pill px-3 py-2 shadow-sm">
+                <i class="bi bi-plus-circle-fill me-1 text-warning"></i> Post a Rental Unit
             </a>
         {% endif %}
     </div>
 
-    <!-- Price Filter -->
-    <form method="get" class="bg-white rounded-4 shadow-sm p-3 mb-4">
-        <div class="row g-2 align-items-end">
+    <!-- Category Filter Pills -->
+    <div class="rental-category-pills d-flex gap-2 overflow-x-auto pb-2 mb-3">
+        <a href="?{% if billing_cycle != 'all' %}billing_cycle={{ billing_cycle }}&{% endif %}{% if request.GET.community %}community={{ request.GET.community }}&{% endif %}rental_type=all" 
+           class="category-pill text-decoration-none px-3 py-2 rounded-pill fw-semibold small {% if rental_type == 'all' or not rental_type %}active{% endif %}">
+            🏠 All Rentals <span class="badge rounded-pill bg-light text-dark ms-1">{{ rental_counts.all }}</span>
+        </a>
+        <a href="?{% if billing_cycle != 'all' %}billing_cycle={{ billing_cycle }}&{% endif %}{% if request.GET.community %}community={{ request.GET.community }}&{% endif %}rental_type=HOSTEL" 
+           class="category-pill text-decoration-none px-3 py-2 rounded-pill fw-semibold small {% if rental_type == 'HOSTEL' %}active{% endif %}">
+            🎓 Student Hostels <span class="badge rounded-pill bg-light text-dark ms-1">{{ rental_counts.HOSTEL }}</span>
+        </a>
+        <a href="?{% if billing_cycle != 'all' %}billing_cycle={{ billing_cycle }}&{% endif %}{% if request.GET.community %}community={{ request.GET.community }}&{% endif %}rental_type=BEDSITTER" 
+           class="category-pill text-decoration-none px-3 py-2 rounded-pill fw-semibold small {% if rental_type == 'BEDSITTER' %}active{% endif %}">
+            🛋️ Bedsitters & Studios <span class="badge rounded-pill bg-light text-dark ms-1">{{ rental_counts.BEDSITTER }}</span>
+        </a>
+        <a href="?{% if billing_cycle != 'all' %}billing_cycle={{ billing_cycle }}&{% endif %}{% if request.GET.community %}community={{ request.GET.community }}&{% endif %}rental_type=RESIDENTIAL" 
+           class="category-pill text-decoration-none px-3 py-2 rounded-pill fw-semibold small {% if rental_type == 'RESIDENTIAL' %}active{% endif %}">
+            🏡 1 & 2 Bed Residential <span class="badge rounded-pill bg-light text-dark ms-1">{{ rental_counts.RESIDENTIAL }}</span>
+        </a>
+        <a href="?{% if billing_cycle != 'all' %}billing_cycle={{ billing_cycle }}&{% endif %}{% if request.GET.community %}community={{ request.GET.community }}&{% endif %}rental_type=COMMERCIAL" 
+           class="category-pill text-decoration-none px-3 py-2 rounded-pill fw-semibold small {% if rental_type == 'COMMERCIAL' %}active{% endif %}">
+            🏪 Commercial & Stalls <span class="badge rounded-pill bg-light text-dark ms-1">{{ rental_counts.COMMERCIAL }}</span>
+        </a>
+    </div>
+
+    <!-- Search & Comprehensive Filters Form -->
+    <form method="get" class="bg-white rounded-4 shadow-sm p-4 mb-4 border">
+        <!-- Preserve rental_type in hidden input -->
+        <input type="hidden" name="rental_type" value="{{ rental_type }}">
+
+        <div class="row g-3">
+            <!-- Search bar -->
+            <div class="col-12 col-md-5">
+                <label class="form-label small fw-semibold text-dark mb-1">
+                    <i class="bi bi-search me-1 text-primary-bu"></i> Search Property
+                </label>
+                <input type="text" name="q" value="{{ q|default:'' }}" class="form-control rounded-pill" placeholder="e.g. Green Valley, Self contained, Kiwenda...">
+            </div>
+
+            <!-- Billing Cycle Filter -->
             <div class="col-6 col-md-3">
-                <label class="form-label small fw-semibold">Min Price (UGX)</label>
-                <input type="number" name="min_price" value="{{ min_price|default:'' }}" class="form-control" placeholder="e.g. 100000">
+                <label class="form-label small fw-semibold text-dark mb-1">
+                    <i class="bi bi-calendar-check me-1 text-warning"></i> Billing Cycle
+                </label>
+                <select name="billing_cycle" class="form-select rounded-pill">
+                    <option value="all" {% if billing_cycle == 'all' or not billing_cycle %}selected{% endif %}>All Cycles</option>
+                    <option value="PER_MONTH" {% if billing_cycle == 'PER_MONTH' %}selected{% endif %}>📅 Per Month</option>
+                    <option value="PER_SEMESTER" {% if billing_cycle == 'PER_SEMESTER' %}selected{% endif %}>🎓 Per Semester</option>
+                </select>
+            </div>
+
+            <!-- Community Hub Filter -->
+            <div class="col-6 col-md-4">
+                <label class="form-label small fw-semibold text-dark mb-1">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> Campus or Town Hub
+                </label>
+                <select name="community" class="form-select rounded-pill">
+                    <option value="all" {% if request.GET.community == 'all' or community_scope == 'all' and not request.GET.community %}selected{% endif %}>🌐 All Uganda (Nationwide)</option>
+                    <optgroup label="🎓 Universities & Campuses">
+                        {% for comm in campus_communities %}
+                            <option value="{{ comm.slug }}" {% if request.GET.community == comm.slug or not request.GET.community and active_community.slug == comm.slug and community_scope != 'all' %}selected{% endif %}>{{ comm.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="🏙️ Commercial Hubs & Towns">
+                        {% for comm in town_communities %}
+                            <option value="{{ comm.slug }}" {% if request.GET.community == comm.slug or not request.GET.community and active_community.slug == comm.slug and community_scope != 'all' %}selected{% endif %}>{{ comm.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <!-- Price Range & Amenities Row -->
+        <div class="row g-3 align-items-center mt-1">
+            <div class="col-6 col-md-3">
+                <label class="form-label small fw-semibold text-dark mb-1">Min Price (UGX)</label>
+                <input type="number" name="min_price" value="{{ min_price|default:'' }}" class="form-control rounded-pill form-control-sm" placeholder="e.g. 150000">
             </div>
             <div class="col-6 col-md-3">
-                <label class="form-label small fw-semibold">Max Price (UGX)</label>
-                <input type="number" name="max_price" value="{{ max_price|default:'' }}" class="form-control" placeholder="e.g. 500000">
+                <label class="form-label small fw-semibold text-dark mb-1">Max Price (UGX)</label>
+                <input type="number" name="max_price" value="{{ max_price|default:'' }}" class="form-control rounded-pill form-control-sm" placeholder="e.g. 600000">
             </div>
-            <div class="col-12 col-md-3">
-                <button type="submit" class="btn btn-primary-bu w-100">
-                    <i class="bi bi-funnel-fill me-1"></i> Filter
+            <div class="col-12 col-md-6 d-flex align-items-end justify-content-md-end gap-2 mt-auto">
+                <button type="submit" class="btn btn-primary-bu rounded-pill px-4 py-2 fw-semibold">
+                    <i class="bi bi-funnel-fill me-1"></i> Apply Filters
                 </button>
+                <a href="{% url 'core:hostel_list' %}" class="btn btn-outline-secondary rounded-pill px-3 py-2 small">
+                    Reset
+                </a>
+            </div>
+        </div>
+
+        <!-- Universal Amenities Checklist Chips -->
+        <hr class="my-3 text-muted">
+        <div>
+            <span class="small fw-semibold text-dark me-2">Must-have Amenities:</span>
+            <div class="d-inline-flex gap-2 flex-wrap mt-1 mt-md-0">
+                <label class="amenity-toggle-chip {% if selected_self_contained %}checked{% endif %}">
+                    <input type="checkbox" name="self_contained" value="1" {% if selected_self_contained %}checked{% endif %} onchange="this.form.submit()">
+                    <i class="bi bi-door-closed-fill text-primary"></i> Self-Contained
+                </label>
+                <label class="amenity-toggle-chip {% if selected_yaka %}checked{% endif %}">
+                    <input type="checkbox" name="yaka" value="1" {% if selected_yaka %}checked{% endif %} onchange="this.form.submit()">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i> Prepaid Yaka
+                </label>
+                <label class="amenity-toggle-chip {% if selected_water %}checked{% endif %}">
+                    <input type="checkbox" name="water" value="1" {% if selected_water %}checked{% endif %} onchange="this.form.submit()">
+                    <i class="bi bi-droplet-fill text-info"></i> Water Reserve / Tank
+                </label>
+                <label class="amenity-toggle-chip {% if selected_security %}checked{% endif %}">
+                    <input type="checkbox" name="security" value="1" {% if selected_security %}checked{% endif %} onchange="this.form.submit()">
+                    <i class="bi bi-shield-check text-success"></i> Gated / Security
+                </label>
+                <label class="amenity-toggle-chip {% if selected_parking %}checked{% endif %}">
+                    <input type="checkbox" name="parking" value="1" {% if selected_parking %}checked{% endif %} onchange="this.form.submit()">
+                    <i class="bi bi-p-circle-fill text-secondary"></i> Parking Space
+                </label>
             </div>
         </div>
     </form>
 
-    <!-- Hostel Grid -->
+    <!-- Rental Units Grid -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for hostel in hostels %}
             <div class="col">
-                <div class="card h-100 listing-card border-0 shadow-sm">
-                    <div class="listing-card-img-wrapper">
+                <div class="card h-100 listing-card border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                    <!-- Image Card with Badges -->
+                    <div class="listing-card-img-wrapper position-relative">
                         {% with hostel.images.first as first_image %}
                             {% if first_image %}
                                 <img src="{{ first_image.image.url }}" class="listing-card-img" alt="{{ hostel.name }}">
                             {% else %}
-                                <div class="placeholder-image-gradient text-muted">
-                                    <i class="bi bi-image fs-1 mb-1"></i>
-                                    <span class="small">No Image</span>
+                                <div class="placeholder-image-gradient text-muted d-flex flex-column align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="bi bi-house fs-1 mb-1"></i>
+                                    <span class="small">No Photo Available</span>
                                 </div>
                             {% endif %}
                         {% endwith %}
+
+                        <!-- Category Tag Top Left -->
+                        <span class="position-absolute top-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white rounded-pill px-2.5 py-1.5 shadow-sm small">
+                            {{ hostel.get_rental_type_display }}
+                        </span>
+
+                        <!-- Billing Cycle Tag Top Right -->
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-warning text-dark rounded-pill px-2.5 py-1.5 shadow-sm fw-bold small">
+                            {{ hostel.get_billing_cycle_display }}
+                        </span>
                     </div>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title fw-bold mb-1">{{ hostel.name }}</h5>
-                        <p class="text-muted small mb-3">
+
+                    <div class="card-body d-flex flex-column p-3">
+                        <h5 class="card-title fw-bold mb-1 text-dark">{{ hostel.name }}</h5>
+                        <p class="text-muted small mb-2">
                             <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ hostel.location }}
                         </p>
-                        <div class="mt-auto d-flex justify-content-between align-items-center">
-                            <span class="text-primary-bu fw-bold fs-5">{{ hostel.price }} UGX</span>
-                            <a href="{% url 'core:hostel_detail' hostel.slug %}" class="btn btn-primary-bu btn-sm px-3 rounded-pill">View</a>
+
+                        <!-- Community Hub Tag -->
+                        {% if hostel.community %}
+                            <div class="mb-2">
+                                <span class="badge bg-light text-primary-bu border rounded-pill px-2.5 py-1 small">
+                                    <i class="bi {% if hostel.community.hub_type == 'CAMPUS' %}bi-mortarboard-fill text-primary-bu{% else %}bi-building text-primary-bu{% endif %} me-1"></i>{{ hostel.community.name }}
+                                </span>
+                            </div>
+                        {% endif %}
+
+                        <!-- Universal Amenities Preview Icons -->
+                        <div class="d-flex gap-1.5 flex-wrap my-2">
+                            {% for amenity in hostel.amenities_list %}
+                                <span class="badge {{ amenity.badge }} rounded-pill px-2 py-1 small" title="{{ amenity.name }}">
+                                    <i class="bi {{ amenity.icon }} me-1"></i>{{ amenity.name }}
+                                </span>
+                            {% empty %}
+                                <span class="text-muted small fst-italic">Standard amenities</span>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Price and CTA -->
+                        <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-primary-bu fw-extrabold fs-5">{{ hostel.price|floatformat:0 }} UGX</span>
+                                <small class="text-muted fw-semibold">{{ hostel.billing_display }}</small>
+                            </div>
+                            <div class="d-flex gap-1">
+                                {% if hostel.whatsapp_number %}
+                                    <a href="{{ hostel.whatsapp_url }}" target="_blank" class="btn btn-success btn-sm rounded-circle p-2" title="WhatsApp Inquiry">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'core:hostel_detail' hostel.slug %}" class="btn btn-primary-bu btn-sm px-3 rounded-pill fw-semibold">
+                                    View Unit
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -67,11 +221,59 @@
         {% empty %}
             <div class="col-12 text-center py-5">
                 <div class="d-inline-flex p-4 rounded-circle bg-light mb-3 text-muted">
-                    <i class="bi bi-house display-4"></i>
+                    <i class="bi bi-house-slash display-4"></i>
                 </div>
-                <p class="mt-3 text-muted fw-semibold">No hostels available right now.</p>
+                <h4 class="fw-bold">No Housing or Rentals Found</h4>
+                <p class="text-muted small">Try broadening your search filters, adjusting price range, or switching communities.</p>
+                <a href="{% url 'core:hostel_list' %}" class="btn btn-primary-bu rounded-pill px-4">
+                    View All Nationwide Rentals
+                </a>
             </div>
         {% endfor %}
     </div>
 </div>
+
+<style>
+.category-pill {
+    background: #EEF2F9;
+    color: #0E1931;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+.category-pill:hover {
+    background: #E2E8F0;
+    color: #0E1931;
+}
+.category-pill.active {
+    background: #0E1931 !important;
+    color: #FFC107 !important;
+    border-color: #0E1931;
+}
+.amenity-toggle-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 50px;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+.amenity-toggle-chip input {
+    display: none;
+}
+.amenity-toggle-chip.checked {
+    background: #0E1931;
+    color: #FFFFFF;
+    border-color: #0E1931;
+}
+.amenity-toggle-chip:hover {
+    border-color: #0E1931;
+}
+</style>
 {% endblock %}

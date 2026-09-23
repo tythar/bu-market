@@ -1,61 +1,197 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ hostel.name }} | BU-MARKET{% endblock %}
+{% block title %}{{ hostel.name }} — Housing & Rentals | BU-MARKET{% endblock %}
 
 {% block content %}
 <div class="my-4">
-    <a href="{% url 'core:hostel_list' %}" class="text-primary-bu text-decoration-none fw-semibold d-inline-block mb-3">
-        <i class="bi bi-arrow-left me-1"></i> Back to Hostels
+    <!-- Back to Hub -->
+    <a href="{% url 'core:hostel_list' %}" class="text-primary-bu text-decoration-none fw-semibold d-inline-flex align-items-center gap-1 mb-3">
+        <i class="bi bi-arrow-left"></i> Back to Housing & Rentals Hub
     </a>
 
     <div class="row g-4">
-        <!-- Images -->
+        <!-- Images Carousel / Grid Column -->
         <div class="col-lg-7">
-            <div class="row g-2">
-                {% for hostel_image in hostel.images.all %}
-                    <div class="col-6">
-                        <img src="{{ hostel_image.image.url }}" class="w-100 rounded-3 shadow-sm" style="height: 220px; object-fit: cover;" alt="{{ hostel.name }}">
-                    </div>
-                {% empty %}
-                    <div class="col-12">
-                        <div class="placeholder-image-gradient text-muted rounded-3" style="height: 300px;">
-                            <i class="bi bi-image fs-1 mb-1"></i>
-                            <span class="small">No Images Available</span>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                <div class="row g-2 p-2">
+                    {% for hostel_image in hostel.images.all %}
+                        <div class="{% if forloop.first and hostel.images.count == 1 %}col-12{% elif forloop.first %}col-12{% else %}col-4{% endif %}">
+                            <img src="{{ hostel_image.image.url }}" class="w-100 rounded-3 shadow-sm object-fit-cover" 
+                                 style="height: {% if forloop.first %}320px{% else %}130px{% endif %};" 
+                                 alt="{{ hostel.name }}">
                         </div>
-                    </div>
-                {% endfor %}
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="placeholder-image-gradient text-muted rounded-3 d-flex flex-column align-items-center justify-content-center" style="height: 320px;">
+                                <i class="bi bi-house fs-1 mb-2"></i>
+                                <span class="fw-semibold">No Photos Uploaded</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Description Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-file-text-fill text-primary-bu me-2"></i> Property & Unit Description</h5>
+                {% if hostel.description %}
+                    <div class="text-dark-emphasis lh-base" style="white-space: pre-wrap; font-weight: 400;">{{ hostel.description }}</div>
+                {% else %}
+                    <p class="text-muted small fst-italic">No additional written description provided. Inquire directly with the landlord via WhatsApp or phone call.</p>
+                {% endif %}
+            </div>
+
+            <!-- Campus & Neighborhood Safety Tips -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+                <h6 class="fw-bold mb-2 text-warning-emphasis"><i class="bi bi-shield-check text-warning me-2"></i> Tenant Rental & Inspection Tips</h6>
+                <ul class="text-muted small mb-0 ps-3">
+                    <li class="mb-1">Always visit and inspect the room, water pressure, and compound security in person before paying.</li>
+                    <li class="mb-1">Confirm agreement terms on water bills, Yaka meter sharing, and security fees.</li>
+                    <li>Never transfer advance deposits to unverified individuals before seeing the vacant unit.</li>
+                </ul>
             </div>
         </div>
 
-        <!-- Details -->
+        <!-- Details & Contact Column -->
         <div class="col-lg-5">
-            <div class="bg-white rounded-4 shadow-sm p-4">
-                <h2 class="fw-bold mb-2">{{ hostel.name }}</h2>
-                <p class="text-muted mb-3">
-                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ hostel.location }}
-                </p>
-                <h3 class="text-primary-bu fw-bold mb-4">{{ hostel.price }} UGX</h3>
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 position-sticky" style="top: 20px;">
+                <!-- Category Tag & Status -->
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                    <span class="badge bg-primary-bu text-white rounded-pill px-3 py-1.5 fw-semibold small">
+                        {{ hostel.get_rental_type_display }}
+                    </span>
+                    <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1.5 fw-bold small">
+                        {{ hostel.get_billing_cycle_display }}
+                    </span>
+                </div>
 
-                {% if hostel.description %}
-                    <h6 class="fw-semibold">Additional Information</h6>
-                    <p class="text-muted mb-4">{{ hostel.description }}</p>
-                {% endif %}
+                <h2 class="fw-bold mb-2 text-dark">{{ hostel.name }}</h2>
 
-                <div class="d-flex gap-2 flex-wrap">
-                    {% if hostel.whatsapp_url %}
-                        <a href="{{ hostel.whatsapp_url }}" target="_blank" class="btn btn-success flex-fill">
-                            <i class="bi bi-whatsapp me-1"></i> WhatsApp
+                <!-- Location & Hub -->
+                <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                    <span class="text-muted small"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ hostel.location }}</span>
+                    {% if hostel.community %}
+                        <span class="badge bg-light text-primary-bu border rounded-pill px-2.5 py-1 small">
+                            <i class="bi {% if hostel.community.hub_type == 'CAMPUS' %}bi-mortarboard-fill text-primary-bu{% else %}bi-building text-primary-bu{% endif %} me-1"></i>{{ hostel.community.name }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Price Box -->
+                <div class="p-3.5 rounded-3 bg-light border mb-4 text-center">
+                    <div class="text-muted small text-uppercase fw-semibold mb-1">Rental Rate</div>
+                    <div class="display-6 fw-extrabold text-primary-bu mb-0">{{ hostel.price|floatformat:0 }} UGX</div>
+                    <div class="badge bg-white text-dark border px-3 py-1 rounded-pill mt-2 small fw-semibold">
+                        Billed {{ hostel.get_billing_cycle_display }}
+                    </div>
+                </div>
+
+                <!-- Universal Amenities Checklist -->
+                <h5 class="fw-bold mb-3 text-dark">
+                    <i class="bi bi-check2-all text-success me-1"></i> Amenities & Facilities
+                </h5>
+                <div class="row g-2 mb-4">
+                    <!-- Self-Contained -->
+                    <div class="col-6">
+                        <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {% if hostel.is_self_contained %}bg-success-subtle text-success-emphasis border-success-subtle{% else %}bg-light text-muted opacity-75{% endif %}">
+                            <i class="bi {% if hostel.is_self_contained %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} fs-5"></i>
+                            <span class="small fw-semibold">Self-Contained</span>
+                        </div>
+                    </div>
+
+                    <!-- Prepaid Yaka Meter -->
+                    <div class="col-6">
+                        <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {% if hostel.has_yaka_meter %}bg-warning-subtle text-warning-emphasis border-warning-subtle{% else %}bg-light text-muted opacity-75{% endif %}">
+                            <i class="bi {% if hostel.has_yaka_meter %}bi-check-circle-fill text-warning{% else %}bi-dash-circle text-muted{% endif %} fs-5"></i>
+                            <span class="small fw-semibold">Prepaid Yaka</span>
+                        </div>
+                    </div>
+
+                    <!-- Water Reserve -->
+                    <div class="col-6">
+                        <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {% if hostel.has_water_reserve %}bg-info-subtle text-info-emphasis border-info-subtle{% else %}bg-light text-muted opacity-75{% endif %}">
+                            <i class="bi {% if hostel.has_water_reserve %}bi-check-circle-fill text-info{% else %}bi-dash-circle text-muted{% endif %} fs-5"></i>
+                            <span class="small fw-semibold">Water Reserve</span>
+                        </div>
+                    </div>
+
+                    <!-- Gated / Security -->
+                    <div class="col-6">
+                        <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {% if hostel.has_security %}bg-success-subtle text-success-emphasis border-success-subtle{% else %}bg-light text-muted opacity-75{% endif %}">
+                            <i class="bi {% if hostel.has_security %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} fs-5"></i>
+                            <span class="small fw-semibold">Gated Security</span>
+                        </div>
+                    </div>
+
+                    <!-- Parking Space -->
+                    <div class="col-12">
+                        <div class="p-2 rounded-3 border d-flex align-items-center gap-2 {% if hostel.has_parking %}bg-primary-subtle text-primary-emphasis border-primary-subtle{% else %}bg-light text-muted opacity-75{% endif %}">
+                            <i class="bi {% if hostel.has_parking %}bi-check-circle-fill text-primary{% else %}bi-dash-circle text-muted{% endif %} fs-5"></i>
+                            <span class="small fw-semibold">Vehicle Parking Space</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Landlord / Property Manager Card -->
+                <div class="p-3 rounded-3 bg-light border mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-white p-2 border d-flex align-items-center justify-content-center text-primary-bu" style="width: 45px; height: 45px;">
+                            <i class="bi bi-person-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Managed by @{{ hostel.owner.username }}</div>
+                            <div class="text-muted small">Campus Housing Provider</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Booking CTA -->
+                <div class="d-grid gap-2">
+                    {% if hostel.whatsapp_number %}
+                        <a href="{{ hostel.whatsapp_url }}" target="_blank" class="btn btn-whatsapp py-3 btn-lg rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-whatsapp fs-4"></i> Inquire on WhatsApp 📲
                         </a>
                     {% endif %}
+
                     {% if hostel.phone_number %}
-                        <a href="tel:{{ hostel.phone_number }}" class="btn btn-outline-primary-bu flex-fill">
-                            <i class="bi bi-telephone-fill me-1"></i> Call
+                        <a href="tel:{{ hostel.phone_number }}" class="btn btn-call py-2.5 rounded-pill fw-semibold d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-telephone-fill"></i> Call Landlord / Manager
                         </a>
+                    {% endif %}
+
+                    {% if not hostel.whatsapp_number and not hostel.phone_number %}
+                        <div class="alert alert-secondary text-center small py-2 mb-0">
+                            No direct phone contacts provided.
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.btn-whatsapp {
+    background-color: #25D366 !important;
+    color: white !important;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-whatsapp:hover {
+    background-color: #1EBE5D !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+}
+.btn-call {
+    background-color: #0E1931 !important;
+    color: white !important;
+    border: none;
+}
+.btn-call:hover {
+    background-color: #1A2F5A !important;
+    color: #FFC107 !important;
+}
+</style>
 {% endblock %}

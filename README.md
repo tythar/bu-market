@@ -1,3 +1,4 @@
+https://bu-market-amber.vercel.app/
 # BU-MARKET MVP
 
 BU-MARKET is a mobile-first campus marketplace designed for the Bugema University community. It enables students and verified campus sellers to list items (electronics, books, hostel utilities, clothing) and services, while allowing buyers to securely browse, search, and purchase items.

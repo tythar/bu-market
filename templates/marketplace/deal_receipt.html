@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Deal Pass #{{ offer.deal_code }} | BU-MARKET{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 780px;">
+    <!-- Breadcrumb / Back button -->
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <a href="{% url 'core:listing_detail' listing.slug %}" class="text-decoration-none text-primary-bu fw-semibold d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i> Back to Listing
+        </a>
+        <a href="{% url 'core:my_offers' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-tag-fill me-1"></i> My Bargains
+        </a>
+    </div>
+
+    <!-- The Deal Pass Card -->
+    <div class="deal-pass-card card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+        <!-- Top Vibrant Banner -->
+        <div class="p-4 text-white text-center position-relative" style="background: linear-gradient(135deg, #0E1931 0%, #1a2f5a 100%); border-bottom: 3px solid #FFC107;">
+            <div class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold text-uppercase mb-2 shadow-sm" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                <i class="bi bi-patch-check-fill me-1"></i> Official Deal Confirmed
+            </div>
+            <h2 class="fw-bold mb-1 text-white">🤝 BU-MARKET BARGAIN PASS</h2>
+            <p class="text-white-50 small mb-0">Locked & Verified Price Agreement for Campus Pickup</p>
+
+            <!-- Deal Pass Code Tag -->
+            <div class="mt-3">
+                <span class="deal-code-pill font-monospace fw-bold px-3 py-1.5 rounded-pill" style="background: rgba(255, 193, 7, 0.15); color: #FFC107; border: 1px dashed #FFC107; font-size: 0.95rem;">
+                    PASS CODE: {{ offer.deal_code }}
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <!-- Price Breakdown Box -->
+            <div class="price-highlight-box p-4 rounded-4 text-center mb-4" style="background: #F8FAFC; border: 2px dashed rgba(14, 25, 49, 0.12);">
+                <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Agreed Bargain Price</div>
+                <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                    <span class="display-5 fw-bold text-success">{{ offer.final_price|floatformat:0 }} UGX</span>
+                    {% if offer.original_price and offer.original_price > offer.final_price %}
+                        <span class="text-decoration-line-through text-muted fs-4">{{ offer.original_price|floatformat:0 }} UGX</span>
+                    {% endif %}
+                </div>
+
+                {% if offer.savings_amount > 0 %}
+                    <div class="mt-2">
+                        <span class="badge bg-danger-subtle text-danger px-3 py-1.5 rounded-pill fw-bold" style="font-size: 0.85rem;">
+                            🔥 Saved {{ offer.savings_amount|floatformat:0 }} UGX ({{ offer.discount_percent }}% OFF)
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Item Details Row -->
+            <div class="row g-3 align-items-center mb-4 pb-4 border-bottom">
+                <div class="col-auto">
+                    {% if listing.image %}
+                        <img src="{{ listing.image.url }}" alt="{{ listing.title }}" class="rounded-3 object-fit-cover shadow-sm" style="width: 85px; height: 85px;">
+                    {% else %}
+                        <div class="rounded-3 bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 85px; height: 85px;">
+                            <i class="bi bi-box fs-2"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <span class="badge badge-bu-category rounded-pill mb-1">{{ listing.category.name }}</span>
+                    <h5 class="fw-bold text-dark mb-1">{{ listing.title }}</h5>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.community.name|default:listing.location }}
+                        <span class="mx-2">•</span>
+                        Condition: <span class="text-uppercase fw-semibold">{{ listing.get_condition_display }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Buyer and Seller Parties Row -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="party-card p-3 rounded-3 bg-light border">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">
+                            <i class="bi bi-person-fill text-primary-bu me-1"></i> Buyer Details
+                        </div>
+                        <div class="fw-bold fs-6 text-dark">@{{ offer.buyer.username }}</div>
+                        <div class="text-muted small">Registered Student Buyer</div>
+                        {% if offer.buyer_note %}
+                            <div class="small bg-white p-2 rounded border mt-2 text-dark-emphasis">
+                                <em>"{{ offer.buyer_note }}"</em>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="party-card p-3 rounded-3 bg-light border">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">
+                            <i class="bi bi-shop text-primary-bu me-1"></i> Seller Details
+                        </div>
+                        <div class="fw-bold fs-6 text-dark">@{{ offer.seller.username }}</div>
+                        <div class="text-muted small">
+                            Campus Seller
+                            {% if listing.seller.active_subscription and listing.seller.active_subscription.plan.badge != 'none' %}
+                                • <span class="badge bg-warning text-dark">{{ listing.seller.active_subscription.plan.badge }}</span>
+                            {% endif %}
+                        </div>
+                        {% if offer.seller_note %}
+                            <div class="small bg-white p-2 rounded border mt-2 text-dark-emphasis">
+                                <em>"{{ offer.seller_note }}"</em>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agreement Timestamp & Safety Checklist -->
+            <div class="alert alert-light border rounded-3 p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <strong class="text-dark small"><i class="bi bi-shield-check text-success me-1"></i> Campus Pickup & Safety Guidelines</strong>
+                    <span class="text-muted small">Agreed: {{ offer.updated_at|date:"M d, Y • H:i" }}</span>
+                </div>
+                <ul class="small text-muted mb-0 ps-3">
+                    <li>Meet in a well-lit, public campus spot (Library steps, Student Center, or Dining Hall).</li>
+                    <li>Inspect and test the item thoroughly before handing over money.</li>
+                    <li>Both parties should verify the deal pass code <strong>#{{ offer.deal_code }}</strong>.</li>
+                </ul>
+            </div>
+
+            <!-- Actions Row (WhatsApp, Print, In-app chat) -->
+            <div class="d-grid gap-2">
+                {% if whatsapp_deal_url %}
+                    <a href="{{ whatsapp_deal_url }}" target="_blank" class="btn btn-whatsapp btn-lg py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm rounded-pill fw-semibold">
+                        <i class="bi bi-whatsapp fs-4"></i> Lock & Coordinate on WhatsApp
+                    </a>
+                {% else %}
+                    <div class="alert alert-secondary text-center small py-2 mb-0">
+                        WhatsApp number not linked for other party. Please use in-app chat.
+                    </div>
+                {% endif %}
+
+                <div class="d-flex gap-2 mt-2">
+                    <button type="button" onclick="window.print()" class="btn btn-outline-dark flex-fill py-2.5 rounded-pill d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-printer-fill"></i> Save / Print Pass
+                    </button>
+                    <a href="{% url 'messaging:start_conversation' listing.id %}" class="btn btn-primary-bu flex-fill py-2.5 rounded-pill d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-chat-dots-fill"></i> In-App Chat
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Bar -->
+        <div class="card-footer bg-light p-3 text-center border-top">
+            <small class="text-muted">BU-MARKET • Bargaining & Negotiation Engine • Empowering Student Commerce</small>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-whatsapp {
+    background-color: #25D366 !important;
+    color: white !important;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-whatsapp:hover {
+    background-color: #1EBE5D !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+}
+@media print {
+    .navbar, .bottom-nav, footer, .btn-whatsapp, .btn-outline-dark, .btn-primary-bu, .breadcrumb-row, a {
+        display: none !important;
+    }
+    .deal-pass-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}
+</style>
+{% endblock %}

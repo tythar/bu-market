@@ -4,10 +4,10 @@
 {% block title %}Home | BU-MARKET{% endblock %}
 
 {% block content %}
-<!-- Hero Styles (Embedded for Guaranteed Instant Rendering) -->
+
 <style>
     .hero-gradient {
-        background: linear-gradient(135deg, #003B8E 0%, #002b66 60%, #0f172a 100%) !important;
+        background: linear-gradient(135deg, #0E1931 0%, #16264C 55%, #070D1A 100%) !important;
         position: relative;
     }
 
@@ -17,7 +17,7 @@
         border-radius: 24px 0 0 24px !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-right: none !important;
-        background: #002b66 !important;
+        background: #0E1931 !important;
         overflow: hidden !important;
         box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4) !important;
         height: 420px !important;
@@ -54,7 +54,7 @@
         left: 0 !important;
         bottom: 0 !important;
         width: 52% !important;
-        background: linear-gradient(to right, #003B8E 0%, rgba(0, 59, 142, 0.88) 38%, rgba(0, 59, 142, 0) 100%) !important;
+        background: linear-gradient(to right, #0E1931 0%, rgba(14, 25, 49, 0.92) 38%, rgba(14, 25, 49, 0) 100%) !important;
         z-index: 10 !important;
         pointer-events: none !important;
     }
@@ -66,7 +66,7 @@
         right: 0 !important;
         bottom: 0 !important;
         height: 35% !important;
-        background: linear-gradient(to top, rgba(0, 43, 102, 0.95) 0%, rgba(0, 43, 102, 0) 100%) !important;
+        background: linear-gradient(to top, rgba(14, 25, 49, 0.95) 0%, rgba(14, 25, 49, 0) 100%) !important;
         z-index: 10 !important;
         pointer-events: none !important;
     }
@@ -131,31 +131,6 @@
     }
 </style>
 
-<!-- Hero Section (Desktop/Tablet View) -->
-<!-- Quick Action Bar -->
-<div class="bg-primary-bu rounded-4 shadow-sm mb-4 px-4 py-3">
-    <div class="row align-items-center g-3">
-        <div class="col-12 col-md-7 text-center text-md-start">
-            <h5 class="text-white fw-bold mb-0">Find what you need, or sell what you don't</h5>
-        </div>
-        <div class="col-12 col-md-5">
-            <div class="d-flex gap-2 justify-content-center justify-content-md-end flex-wrap">
-                <a href="{% url 'core:browse' %}" class="btn btn-light fw-semibold px-4 rounded-pill">
-                    <i class="bi bi-bag-fill me-1"></i> Browse Items
-                </a>
-                {% if user.is_authenticated and user.is_seller %}
-                    <a href="{% url 'dashboard:create_listing' %}" class="btn btn-outline-light fw-semibold px-4 rounded-pill">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Post an Item
-                    </a>
-                {% elif not user.is_authenticated %}
-                    <a href="{% url 'accounts:register' %}" class="btn btn-outline-light fw-semibold px-4 rounded-pill">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Post an Item
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
 
 {% if user.is_authenticated and recently_viewed_listings %}
 <div class="card mb-4">
@@ -270,8 +245,8 @@
 
   .category-item-card:hover {
     transform: translateY(-4px) !important;
-    box-shadow: 0 10px 22px rgba(0, 59, 142, 0.15) !important;
-    border-color: #003B8E !important;
+    box-shadow: 0 10px 22px rgba(14, 25, 49, 0.15) !important;
+    border-color: #0E1931 !important;
     background: #ffffff !important;
   }
 
@@ -285,14 +260,15 @@
     justify-content: center !important;
     margin-bottom: 10px !important;
     overflow: hidden !important;
-    color: #003B8E !important;
+    color: #0E1931 !important;
     font-size: 1.6rem !important;
     transition: transform 0.25s ease !important;
   }
 
   .category-item-card:hover .category-icon-circle {
     transform: scale(1.1) !important;
-    background: #e0e7ff !important;
+    background: #FFC107 !important;
+    color: #0E1931 !important;
   }
 
   .category-icon-circle img {
@@ -302,7 +278,7 @@
   }
 
   .category-item-name {
-    color: #1e293b !important;
+    color: #0E1931 !important;
     font-weight: 600 !important;
     font-size: 0.82rem !important;
     text-align: center !important;
@@ -323,11 +299,11 @@
     border-radius: 50%;
     background: #ffffff;
     border: 1px solid #cbd5e1;
-    color: #003B8E;
+    color: #0E1931;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 6px 16px rgba(14, 25, 49, 0.12);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 1.1rem;
@@ -335,11 +311,11 @@
   }
 
   .btn-scroll-arrow:hover {
-    background: #003B8E;
-    color: #ffffff;
-    border-color: #003B8E;
+    background: #0E1931;
+    color: #FFC107;
+    border-color: #0E1931;
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 8px 20px rgba(0, 59, 142, 0.3);
+    box-shadow: 0 8px 20px rgba(14, 25, 49, 0.3);
   }
 
   .btn-scroll-arrow.arrow-left {
@@ -356,7 +332,7 @@
     border-radius: 50%;
     background: #ffffff;
     border: 1px solid #cbd5e1;
-    color: #003B8E;
+    color: #0E1931;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -366,9 +342,9 @@
   }
 
   .header-nav-btn:hover {
-    background: #003B8E;
-    color: #ffffff;
-    border-color: #003B8E;
+    background: #0E1931;
+    color: #FFC107;
+    border-color: #0E1931;
   }
 
   /* Phone Screen Optimizations */
@@ -424,11 +400,6 @@
 
   <!-- Single-Row Track Wrapper -->
   <div class="category-track-container">
-    <!-- Side Arrow Left (Desktop / Large Screens) -->
-    <button type="button" class="btn-scroll-arrow arrow-left d-none d-lg-flex" onclick="scrollCatTrack(-1)" aria-label="Scroll left">
-      <i class="bi bi-chevron-left"></i>
-    </button>
-
     <!-- Horizontal Category Scroll Track -->
     <div class="category-scroll-track" id="catScrollTrack">
             <a href="{% url 'core:hostel_list' %}" class="category-item-card">
@@ -450,11 +421,6 @@
         </a>
       {% endfor %}
     </div>
-
-    <!-- Side Arrow Right (Desktop / Large Screens) -->
-    <button type="button" class="btn-scroll-arrow arrow-right d-none d-lg-flex" onclick="scrollCatTrack(1)" aria-label="Scroll right">
-      <i class="bi bi-chevron-right"></i>
-    </button>
   </div>
 </div>
 
@@ -539,6 +505,32 @@
 
 
 
+<!-- Active Hub Indicator Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2.5">
+            <span class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary-bu text-warning" style="width: 36px; height: 36px;">
+                <i class="bi {% if community_scope == 'all' %}bi-globe2{% else %}bi-geo-alt-fill{% endif %} fs-6"></i>
+            </span>
+            <div>
+                <span class="small text-muted d-block" style="font-size: 0.72rem; letter-spacing: 0.5px;">MARKETPLACE HUB</span>
+                <span class="fw-bold text-dark fs-6">
+                    {% if community_scope == 'all' %}
+                        All Uganda <span class="badge bg-warning text-dark fw-bold rounded-pill ms-1" style="font-size: 0.68rem;">Nationwide</span>
+                    {% else %}
+                        {{ active_community.name }} <span class="badge bg-light text-muted border rounded-pill ms-1" style="font-size: 0.68rem;">{{ active_community.region }}</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#communityModal">
+                <i class="bi bi-arrow-repeat me-1 text-warning"></i> Switch Campus / Town
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Promoted Listings -->
 {% if promoted_listings %}
 <div class="my-5">
@@ -566,12 +558,21 @@
                     </div>
                     
                     <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
-                            <span class="badge bg-primary-bu bg-opacity-10 text-primary-bu border border-primary border-opacity-10">{{ listing.category.name }}</span>
-                            <span class="badge text-uppercase bg-light text-dark border">{{ listing.get_condition_display }}</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+                            <span class="badge badge-bu-category rounded-pill">{{ listing.category.name }}</span>
+                            <span class="badge text-uppercase bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 0.65rem;">{{ listing.get_condition_display }}</span>
                         </div>
                         <h5 class="card-title fw-bold text-truncate mb-1">{{ listing.title }}</h5>
-                        <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.location }}</p>
+                        <p class="text-muted small mb-1 text-truncate"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.location }}</p>
+                        {% if listing.community %}
+                            <div class="mb-2">
+                                <span class="badge bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 0.68rem;">
+                                    <i class="bi {% if listing.community.hub_type == 'CAMPUS' %}bi-mortarboard-fill text-primary-bu{% else %}bi-shop text-primary-bu{% endif %} me-1"></i>{{ listing.community.name }}
+                                </span>
+                            </div>
+                        {% else %}
+                            <div class="mb-2"></div>
+                        {% endif %}
                         
                         <div class="mt-auto d-flex justify-content-between align-items-center">
                             <span class="text-primary-bu fw-bold fs-5 text-nowrap">{{ listing.price }} UGX</span>
@@ -611,12 +612,21 @@
                     </div>
                     
                     <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
-                            <span class="badge bg-light text-dark border">{{ listing.category.name }}</span>
-                            <span class="badge text-uppercase bg-light text-dark border">{{ listing.get_condition_display }}</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+                            <span class="badge badge-bu-category rounded-pill">{{ listing.category.name }}</span>
+                            <span class="badge text-uppercase bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 0.65rem;">{{ listing.get_condition_display }}</span>
                         </div>
                         <h5 class="card-title fw-bold text-truncate mb-1">{{ listing.title }}</h5>
-                        <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.location }}</p>
+                        <p class="text-muted small mb-1 text-truncate"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ listing.location }}</p>
+                        {% if listing.community %}
+                            <div class="mb-2">
+                                <span class="badge bg-light text-dark border rounded-pill px-2 py-1" style="font-size: 0.68rem;">
+                                    <i class="bi {% if listing.community.hub_type == 'CAMPUS' %}bi-mortarboard-fill text-primary-bu{% else %}bi-shop text-primary-bu{% endif %} me-1"></i>{{ listing.community.name }}
+                                </span>
+                            </div>
+                        {% else %}
+                            <div class="mb-2"></div>
+                        {% endif %}
                         
                         <div class="mt-auto d-flex justify-content-between align-items-center">
                             <span class="text-primary-bu fw-bold fs-5 text-nowrap">{{ listing.price }} UGX</span>
@@ -631,7 +641,12 @@
                 <div class="d-inline-flex p-4 rounded-circle bg-light mb-3 text-muted">
                     <i class="bi bi-basket display-4"></i>
                 </div>
-                <p class="mt-3 text-muted fw-semibold">No active listings available right now. Be the first to start selling!</p>
+                <p class="mt-3 text-muted fw-semibold">No active listings available in this community right now.</p>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-primary-bu btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#communityModal">
+                        Browse Other Campuses & Towns
+                    </button>
+                </div>
             </div>
         {% endfor %}
     </div>
