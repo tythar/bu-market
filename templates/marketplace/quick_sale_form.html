@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} | BU-MARKET{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-10 col-lg-8">
+        <div class="card border-0 shadow-sm p-4 rounded-3">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">{{ title }}</h2>
+                <a href="{% url 'core:quick_sale_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-chevron-left"></i> Cancel
+                </a>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="alert alert-info small mt-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    This item will be visible for a limited time only and requires moderator approval.
+                </div>
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary-bu py-2 fs-5">Post Quick Sale Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

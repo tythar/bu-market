@@ -25,6 +25,11 @@ class HomeView(ListView):
             status=Listing.Status.ACTIVE,
             is_promoted=True
         ).order_by('-created_at')[:4]
+        context['quick_sale_items'] = Listing.objects.filter(
+            status=Listing.Status.ACTIVE,
+            is_quick_sale=True,
+            quick_sale_expires_at__gt=timezone.now()
+        ).order_by('-created_at')[:10]
         return context
 
 

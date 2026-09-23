@@ -5,8 +5,10 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from subscriptions.models import SellerSubscription, SubscriptionPlan
 from accounts.models import User
-from marketplace.forms import ListingForm, HostelForm
 from marketplace.models import Listing, Category, Hostel, HostelImage
+from datetime import timedelta
+from marketplace.forms import ListingForm, HostelForm, QuickSaleForm
+
 
 # Role verification decorators
 def role_required(allowed_roles):
@@ -86,7 +88,6 @@ def create_listing(request):
         if form.is_valid():
             listing = form.save(commit=False)
             listing.seller = request.user
-            listing.save()
             messages.success(request, f'Listing "{listing.title}" created successfully and is now live!')
             return redirect('dashboard:seller_listings')
     else:
@@ -131,9 +132,9 @@ def edit_listing(request, slug):
         form = ListingForm(request.POST, request.FILES, instance=listing, user=request.user)
         if form.is_valid():
             listing = form.save(commit=False)
-            listing.status = Listing.Status.PENDING # Re-moderate on edit
+            listing.seller = request.user
             listing.save()
-            messages.success(request, f'Listing "{listing.title}" updated successfully and is pending moderation!')
+            messages.success(request, f'Listing "{listing.title}" created successfully and is now live!')
             return redirect('dashboard:seller_listings')
     else:
         form = ListingForm(instance=listing, user=request.user)
@@ -196,3 +197,27 @@ def admin_dashboard(request):
         'pending_payments': pending_payments,
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
+
+
+@login_required
+@role_required([User.Role.SELLER])
+def create_quick_sale(request):
+    active_sub = request.user.active_subscription
+    if not active_sub or active_sub.plan.name != 'QUICK_SALE':
+        messages.error(request, "You need an active Quick Sale subscription to post here.")
+        return redirect('dashboard:seller_dashboard')
+
+    if request.method == 'POST':
+        form = QuickSaleForm(request.POST, request.FILES, user=request.user)
+        if form.is_valid():
+            listing = form.save(commit=False)
+            listing.seller = request.user
+            listing.is_quick_sale = True
+            listing.quick_sale_expires_at = timezone.now() + timedelta(days=active_sub.plan.duration_days)
+            listing.save()
+            messages.success(request, f'"{listing.title}" posted as Quick Sale!')
+            return redirect('dashboard:seller_dashboard')
+    else:
+        form = QuickSaleForm(user=request.user)
+
+    return render(request, 'dashboard/quick_sale_form.html', {'form': form, 'title': 'Post Quick Sale Item'})

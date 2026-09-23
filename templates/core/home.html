@@ -458,6 +458,74 @@
   </div>
 </div>
 
+<!-- Quick Sale Banner -->
+<style>
+    .quick-sale-track {
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        gap: 14px;
+        padding: 10px 5px 15px 5px;
+        scrollbar-width: none;
+    }
+    .quick-sale-track::-webkit-scrollbar { display: none; }
+    .quick-sale-card {
+        flex: 0 0 200px;
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: transform 0.2s ease;
+    }
+    .quick-sale-card:hover { transform: translateY(-3px); }
+    .quick-sale-card img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+    }
+</style>
+
+<div class="my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 d-flex align-items-center">
+            <i class="bi bi-lightning-charge-fill text-primary-bu me-2"></i> Quick Sale
+        </h5>
+        <a href="{% url 'core:quick_sale_list' %}" class="text-primary-bu fw-semibold text-decoration-none small">
+            See All <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="quick-sale-track" id="quickSaleTrack">
+        {% for item in quick_sale_items %}
+            <a href="{% url 'core:listing_detail' item.slug %}" class="quick-sale-card">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                {% endif %}
+                <div class="p-2">
+                    <div class="small fw-bold text-truncate">{{ item.title }}</div>
+                    <div class="small text-primary-bu fw-bold">{{ item.price }} UGX</div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    (function() {
+        const track = document.getElementById('quickSaleTrack');
+        if (track) {
+            setInterval(() => {
+                if (track.scrollLeft + track.clientWidth >= track.scrollWidth) {
+                    track.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    track.scrollBy({ left: 220, behavior: 'smooth' });
+                }
+            }, 3000);
+        }
+    })();
+</script>
+
 <script>
   function scrollCatTrack(direction) {
     const track = document.getElementById('catScrollTrack');

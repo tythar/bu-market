@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.contrib import messages as django_messages
 from .models import Listing
 from messaging.models import Conversation
+from django.utils import timezone
+
 
 
 @login_required
@@ -55,4 +57,16 @@ def hostel_detail(request, slug):
     hostel = get_object_or_404(Hostel, slug=slug, is_active=True, status=Hostel.Status.ACTIVE)
     return render(request, 'marketplace/hostel_detail.html', {
         'hostel': hostel,
+    })
+# this is for the quick sale
+
+def quick_sale_list(request):
+    listings = Listing.objects.filter(
+        is_quick_sale=True,
+        status=Listing.Status.ACTIVE,
+        quick_sale_expires_at__gt=timezone.now()
+    ).order_by('-created_at')
+
+    return render(request, 'marketplace/quick_sale_list.html', {
+        'listings': listings,
     })

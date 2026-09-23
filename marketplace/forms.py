@@ -3,9 +3,9 @@ from .models import Listing, Hostel, HostelImage
 
 class ListingForm(forms.ModelForm):
     class Meta:
-        model = Listing
-        fields = ['category', 'title', 'description', 'price', 'condition', 'location', 'image', 'is_promoted', 'phone_number', 'whatsapp_number']
-        widgets = {
+            model = Listing
+            fields = ['category', 'title', 'description', 'price', 'condition', 'location', 'image', 'is_promoted', 'phone_number', 'whatsapp_number']
+            widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
         }
 
@@ -45,5 +45,27 @@ class HostelForm(forms.ModelForm):
         cleaned_data = super().clean()
         if self.user:
             self.instance.owner = self.user
+        self.instance.clean()
+        return cleaned_data
+
+# this is for the quick sale input
+
+class QuickSaleForm(forms.ModelForm):
+    class Meta:
+        model = Listing
+        fields = ['category', 'title', 'description', 'price', 'location', 'image', 'phone_number', 'whatsapp_number']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.user:
+            self.instance.seller = self.user
+        self.instance.is_quick_sale = True
         self.instance.clean()
         return cleaned_data

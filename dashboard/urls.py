@@ -4,6 +4,7 @@ from .views import (
     seller_dashboard,
     seller_listings,
     create_listing,
+    create_quick_sale,
     create_hostel,
     edit_listing,
     accountant_dashboard,
@@ -23,4 +24,5 @@ urlpatterns = [
     path('accountant/', accountant_dashboard, name='accountant_dashboard'),
     path('moderator/', moderator_dashboard, name='moderator_dashboard'),
     path('admin/', admin_dashboard, name='admin_dashboard'),
+    path('seller/quick-sale/create/', create_quick_sale, name='create_quick_sale'),
 ]
