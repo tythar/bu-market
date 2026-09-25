@@ -35,19 +35,43 @@ class User(AbstractUser):
     def is_admin_role(self):
         return self.role == self.Role.ADMIN or self.is_superuser
 
-    @property
-    def active_subscription(self):
+
+    def get_active_subscription(self, plan_type=None):
         from subscriptions.models import SellerSubscription
         from django.utils import timezone
-        return SellerSubscription.objects.filter(
+        qs = SellerSubscription.objects.filter(
             seller=self,
             status=SellerSubscription.Status.APPROVED,
             expires_at__gt=timezone.now()
-        ).order_by('-approved_at').first()
+        )
+        if plan_type:
+            qs = qs.filter(plan__name=plan_type)
+        return qs.order_by('-approved_at').first()
+
+    @property
+    def active_subscription(self):
+        return self.get_active_subscription()
+
+    @property
+    def active_quick_sale_subscription(self):
+        return self.get_active_subscription(plan_type='QUICK_SALE')
+
+    @property
+    def has_active_quick_sale_subscription(self):
+        return self.active_quick_sale_subscription is not None
 
     @property
     def has_active_subscription(self):
-        return self.active_subscription is not None
+        from subscriptions.models import SubscriptionPlan
+        regular_plans = [
+            SubscriptionPlan.PlanType.BASIC,
+            SubscriptionPlan.PlanType.SILVER,
+            SubscriptionPlan.PlanType.GOLD,
+        ]
+        for plan_type in regular_plans:
+            if self.get_active_subscription(plan_type=plan_type):
+                return True
+        return False
 
     @property
     def max_allowed_active_listings(self):

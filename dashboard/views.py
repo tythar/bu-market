@@ -202,8 +202,8 @@ def admin_dashboard(request):
 @login_required
 @role_required([User.Role.SELLER])
 def create_quick_sale(request):
-    active_sub = request.user.active_subscription
-    if not active_sub or active_sub.plan.name != 'QUICK_SALE':
+    active_sub = request.user.active_quick_sale_subscription
+    if not active_sub:
         messages.error(request, "You need an active Quick Sale subscription to post here.")
         return redirect('dashboard:seller_dashboard')
 
