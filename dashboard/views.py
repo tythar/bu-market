@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from subscriptions.models import SellerSubscription, SubscriptionPlan
+from subscriptions.models import SellerSubscription, SubscriptionPlan, BuyerMembership
 from accounts.models import User
 from marketplace.models import Listing, Category, Hostel, HostelImage
 from datetime import timedelta
@@ -48,6 +48,7 @@ def seller_dashboard(request):
     # Calculate counts and sums
     from django.db.models import Sum
     active_listings_count = listings.filter(status=Listing.Status.ACTIVE).count()
+    suspended_listings = listings.filter(status=Listing.Status.SUSPENDED)
     total_views = listings.aggregate(Sum('views_count'))['views_count__sum'] or 0
     
     # Active subscription check
@@ -59,10 +60,12 @@ def seller_dashboard(request):
     context = {
         'listings': listings,
         'active_listings_count': active_listings_count,
+        'suspended_listings': suspended_listings,
         'total_views': total_views,
         'active_sub': active_sub,
         'history': history,
         'plans': SubscriptionPlan.objects.all(),
+        
     }
     return render(request, 'dashboard/seller_dashboard.html', context)
 
@@ -88,6 +91,7 @@ def create_listing(request):
         if form.is_valid():
             listing = form.save(commit=False)
             listing.seller = request.user
+            listing.save()
             messages.success(request, f'Listing "{listing.title}" created successfully and is now live!')
             return redirect('dashboard:seller_listings')
     else:
@@ -176,6 +180,7 @@ def admin_dashboard(request):
     total_listings = Listing.objects.count()
     active_listings = Listing.objects.filter(status=Listing.Status.ACTIVE).count()
     pending_listings = Listing.objects.filter(status=Listing.Status.PENDING).count()
+    suspended_listings = Listing.objects.filter(status=Listing.Status.SUSPENDED).count()
     
     total_sellers = User.objects.filter(role=User.Role.SELLER).count()
     active_subscriptions = SellerSubscription.objects.filter(
@@ -192,6 +197,7 @@ def admin_dashboard(request):
         'total_listings': total_listings,
         'active_listings': active_listings,
         'pending_listings': pending_listings,
+        'suspended_listings': suspended_listings,
         'total_sellers': total_sellers,
         'active_subscriptions': active_subscriptions,
         'pending_payments': pending_payments,

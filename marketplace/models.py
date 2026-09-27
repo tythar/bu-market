@@ -62,6 +62,7 @@ class Listing(models.Model):
         SOLD = 'SOLD', 'Sold'
         REJECTED = 'REJECTED', 'Rejected'
         REMOVED = 'REMOVED', 'Removed by Admin'
+        SUSPENDED = 'SUSPENDED', 'Suspended (Subscription Expired)'
 
     seller = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -116,6 +117,7 @@ class Listing(models.Model):
 
     is_quick_sale = models.BooleanField(default=False)
     quick_sale_expires_at = models.DateTimeField(null=True, blank=True)
+    suspended_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def whatsapp_url(self):

@@ -85,6 +85,30 @@
             </div>
         </a>
     </div>
+        <!-- Pending Payments -->
+    <div class="col-6 col-lg-4">
+        <a href="{% url 'dashboard:accountant_dashboard' %}" class="text-decoration-none text-dark">
+            <div class="card border-0 shadow-sm p-4 h-100 bg-white" style="transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 15px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="text-muted fw-bold">Pending Payments</span>
+                    <i class="bi bi-credit-card-2-front text-danger fs-2"></i>
+                </div>
+                <h2 class="fw-bold mb-0">{{ pending_payments }}</h2>
+            </div>
+        </a>
+    </div>
+
+    <!-- Suspended Listings -->
+    <div class="col-6 col-lg-4">
+        <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="text-muted fw-bold">Suspended Listings</span>
+                <i class="bi bi-pause-circle-fill text-secondary fs-2"></i>
+            </div>
+            <h2 class="fw-bold mb-0">{{ suspended_listings }}</h2>
+        </div>
+    </div>
+</div>
 </div>
 
 <div class="card border-0 shadow-sm p-4 mb-4 text-center">

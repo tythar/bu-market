@@ -14,6 +14,23 @@
 <a href="{% url 'messaging:inbox' %}" class="btn btn-outline-primary-bu">
     <i class="bi bi-chat-dots-fill me-2"></i> Messages
 </a>
+
+{% if suspended_listings %}
+<div class="alert alert-warning d-flex align-items-start gap-3 mt-3 mb-4 border-0 shadow-sm" role="alert">
+    <i class="bi bi-pause-circle-fill fs-3"></i>
+    <div class="flex-grow-1">
+        <strong>{{ suspended_listings.count }} listing{{ suspended_listings.count|pluralize }} suspended</strong> — your subscription has expired, so these are hidden from buyers.
+        <ul class="mb-2 mt-2 small">
+            {% for listing in suspended_listings %}
+                <li>{{ listing.title }}</li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'subscriptions:apply_seller' %}" class="btn btn-sm btn-warning fw-bold">
+            <i class="bi bi-arrow-repeat me-1"></i> Resubscribe to Reactivate
+        </a>
+    </div>
+</div>
+{% endif %}
 <div class="row">
     <!-- Active Subscription Details -->
     <div class="col-md-4 mb-4">
