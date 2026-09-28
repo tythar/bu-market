@@ -50,7 +50,18 @@ class User(AbstractUser):
 
     @property
     def active_subscription(self):
-        return self.get_active_subscription()
+        from subscriptions.models import SellerSubscription, SubscriptionPlan
+        from django.utils import timezone
+        return SellerSubscription.objects.filter(
+            seller=self,
+            status=SellerSubscription.Status.APPROVED,
+            expires_at__gt=timezone.now(),
+            plan__name__in=[
+                SubscriptionPlan.PlanType.BASIC,
+                SubscriptionPlan.PlanType.SILVER,
+                SubscriptionPlan.PlanType.GOLD,
+            ],
+        ).order_by('-approved_at').first()
 
     @property
     def active_quick_sale_subscription(self):
@@ -59,6 +70,14 @@ class User(AbstractUser):
     @property
     def has_active_quick_sale_subscription(self):
         return self.active_quick_sale_subscription is not None
+
+    @property
+    def active_hostel_subscription(self):
+        return self.get_active_subscription(plan_type='HOSTEL')
+
+    @property
+    def has_active_hostel_subscription(self):
+        return self.active_hostel_subscription is not None
 
     @property
     def has_active_subscription(self):

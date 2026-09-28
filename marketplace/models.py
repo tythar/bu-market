@@ -187,6 +187,8 @@ class Hostel(models.Model):
         PENDING = 'PENDING', 'Pending Moderation'
         ACTIVE = 'ACTIVE', 'Active'
         REJECTED = 'REJECTED', 'Rejected'
+        SUSPENDED = 'SUSPENDED', 'Suspended (Subscription Expired)'
+
 
     class RentalType(models.TextChoices):
         HOSTEL = 'HOSTEL', 'Student Hostel (Single / Shared)'
@@ -242,6 +244,7 @@ class Hostel(models.Model):
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    suspended_at = models.DateTimeField(null=True, blank=True)   
     removal_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -306,8 +309,8 @@ class Hostel(models.Model):
     def clean(self):
         if not self.owner.is_seller:
             raise ValidationError("Only users with the SELLER role can post hostels.")
-        if not self.owner.has_active_subscription:
-            raise ValidationError("You must have an active approved subscription to post a hostel.")
+        if not self.owner.has_active_hostel_subscription:
+            raise ValidationError("You must have an active Hostel subscription to post a hostel.")
 
     def __str__(self):
         return self.name
@@ -342,6 +345,7 @@ class Offer(models.Model):
         ACCEPTED = 'ACCEPTED', 'Offer Accepted 🎉'
         DECLINED = 'DECLINED', 'Declined ❌'
         CANCELLED = 'CANCELLED', 'Cancelled'
+        
 
     listing = models.ForeignKey(
         Listing,

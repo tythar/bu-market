@@ -102,8 +102,8 @@ def create_listing(request):
 @login_required
 @role_required([User.Role.SELLER])
 def create_hostel(request):
-    if not request.user.has_active_subscription:
-        messages.error(request, "You must have an active approved subscription to post a hostel.")
+    if not request.user.has_active_hostel_subscription:
+        messages.error(request, "You need an active Hostel subscription to post here.")
         return redirect('dashboard:seller_dashboard')
 
     if request.method == 'POST':

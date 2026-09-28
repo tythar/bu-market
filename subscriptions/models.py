@@ -9,6 +9,7 @@ class SubscriptionPlan(models.Model):
         SILVER = 'SILVER', 'Silver'
         GOLD = 'GOLD', 'Gold'
         QUICK_SALE = 'QUICK_SALE', 'Quick Sale'
+        HOSTEL = 'HOSTEL', 'Hostel'
 
     class BadgeType(models.TextChoices):
         NONE = 'none', 'None'
