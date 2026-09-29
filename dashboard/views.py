@@ -50,6 +50,7 @@ def seller_dashboard(request):
     active_listings_count = listings.filter(status=Listing.Status.ACTIVE).count()
     suspended_listings = listings.filter(status=Listing.Status.SUSPENDED)
     total_views = listings.aggregate(Sum('views_count'))['views_count__sum'] or 0
+    suspended_hostels = Hostel.objects.filter(owner=user, status=Hostel.Status.SUSPENDED)
     
     # Active subscription check
     active_sub = user.active_subscription
@@ -61,6 +62,7 @@ def seller_dashboard(request):
         'listings': listings,
         'active_listings_count': active_listings_count,
         'suspended_listings': suspended_listings,
+        'suspended_hostels': suspended_hostels,
         'total_views': total_views,
         'active_sub': active_sub,
         'history': history,
